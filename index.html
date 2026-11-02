@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.6.5</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.6.6</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -66,6 +66,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
  <button id="bVid">📥 Enviar vídeos (até 200)</button><input id="fvid" type="file" accept="video/*" multiple>
  <button id="bTpl">🖼️ Selecionar template</button><input id="ftpl" type="file" accept="image/*">
  <button id="bNo">🚫 Sem template</button>
+ <button id="bCapaTop" class="g">🖼️ Adicionar capa do Reels</button><div class="note" id="capaTopMsg" style="margin:-2px 0 6px">Sem capa. Escolha uma imagem e ela entra no começo de todos os vídeos.</div>
  <div class="f" id="drv" style="border:1px solid #2a3350;border-radius:8px;padding:8px;margin:4px 0 8px">
   <div class="ck"><input id="drvOn" type="checkbox">☁️ Enviar também para o Google Drive</div>
   <div class="ck"><input id="drvOnly" type="checkbox">Só no Drive (não guardar no meu Mac)</div><label style="font-size:11px;opacity:.8">ID da pasta do Drive:</label><input id="drvFolder" value="1QXCxuvUnalen0oOMxJhR0Jz9DoVC6EUB">
@@ -388,10 +389,10 @@ $('#fmus').onchange=e=>{for(const f of e.target.files)musics.push({name:f.name,u
  $('#musn').textContent=musics.length+' música(s): '+musics.map(m=>m.name).join(', ').slice(0,90)};
 $('#bWm').onclick=()=>$('#fwm').click();
 $('#fwm').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{wmImg=im;dirty=true};im.src=URL.createObjectURL(f);e.target.value=''};
-$('#bCapa').onclick=()=>$('#fcapa').click();
-$('#fcapa').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{capaImg=im;$('#capaMsg').textContent=`✅ Capa carregada (${im.naturalWidth}×${im.naturalHeight}). Vai no começo de todos os vídeos.`;capaUntil=performance.now()+1500};im.onerror=()=>{$('#capaMsg').textContent='Não consegui abrir essa imagem.'};im.src=URL.createObjectURL(f);e.target.value=''};
+$('#bCapa').onclick=()=>$('#fcapa').click();$('#bCapaTop').onclick=()=>$('#fcapa').click();
+$('#fcapa').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{capaImg=im;$('#capaTopMsg').textContent=`✅ Capa adicionada (${im.naturalWidth}×${im.naturalHeight}) — vai no começo de todos os vídeos. Ajuste o tempo na aba Efeitos.`;$('#bCapaTop').textContent='🖼️ Trocar capa do Reels';$('#capaMsg').textContent=`✅ Capa carregada (${im.naturalWidth}×${im.naturalHeight}). Vai no começo de todos os vídeos.`;capaUntil=performance.now()+1500};im.onerror=()=>{$('#capaMsg').textContent='Não consegui abrir essa imagem.'};im.src=URL.createObjectURL(f);e.target.value=''};
 $('#vCapa').onclick=()=>{if(!capaImg){$('#capaMsg').textContent='Escolha uma imagem primeiro.';return}capaUntil=performance.now()+1500};
-$('#clrCapa').onclick=()=>{capaImg=null;capaUntil=0;$('#capaMsg').textContent='Sem capa.'};
+$('#clrCapa').onclick=()=>{capaImg=null;capaUntil=0;$('#capaTopMsg').textContent='Sem capa. Escolha uma imagem e ela entra no começo de todos os vídeos.';$('#bCapaTop').textContent='🖼️ Adicionar capa do Reels';$('#capaMsg').textContent='Sem capa.'};
 $('#clrWm').onclick=()=>{wmImg=null;dirty=true};
 $('#applyHeads').onclick=()=>{const L=$('#heads').value.split('\n').map(x=>x.trim()).filter(Boolean);
  if(!L.length||!files.length){$('#msg').textContent='Escreva as headlines e envie os vídeos primeiro.';return}
