@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.9</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v2.0</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -117,7 +117,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
  <div class="bar">Tamanho: <select id="sz"><option value="120">Pequeno</option><option value="170" selected>Médio</option><option value="240">Grande</option></select>
   <button class="g sm" id="refresh">↻ Atualizar previews</button><button class="sm" id="all">☑ Todos</button><button class="sm" id="none">☐ Limpar</button><button class="r sm" id="clr">🗑 Remover todos</button></div>
  <div id="grid"><div class="empty">Selecione um template e envie vídeos</div></div>
- <progress id="pg" value="0" max="1"></progress><div class="note" id="msg">Cada vídeo é gravado em tempo real. Mantenha a aba aberta e visível. Use Chrome ou Edge.</div>
+ <div id="errlog" style="display:none;background:#3a1620;border:1px solid #c0392b;border-radius:8px;padding:8px;margin:6px 0;font-size:12px;white-space:pre-wrap;max-height:140px;overflow:auto"></div><progress id="pg" value="0" max="1"></progress><div class="note" id="msg">Cada vídeo é gravado em tempo real. Mantenha a aba aberta e visível. Use Chrome ou Edge.</div>
 </section>
 <aside class="col">
  <h1 style="font-size:16px">👁 Preview</h1><div class="sub">Visualização em tempo real · arraste a área tracejada</div>
@@ -422,7 +422,7 @@ async function exportOne(f,mt){
  if(mOn){mus.src=musics[Math.floor(Math.random()*musics.length)].url;try{mus.currentTime=0;await mus.play()}catch(e){}}
  const tr=[...cv.captureStream(+S.fps||30).getVideoTracks()];if(mOn||!mute)tr.push(...dest.stream.getAudioTracks());
  const ms=new MediaStream(tr),sc=S.q>=1080?1:S.q>=720?.6:.35,vb=Math.round(+S.br*1e6*sc),lo=Math.round(8e6*sc),m=mt.t?{mimeType:mt.t}:{};
- const opts=[{...m,videoBitsPerSecond:vb,audioBitsPerSecond:192000},{...m,videoBitsPerSecond:vb},{...m,videoBitsPerSecond:lo},{...m},{}];
+ const opts=[{...m,videoBitsPerSecond:vb,audioBitsPerSecond:192000},{...m,videoBitsPerSecond:vb},{...m,videoBitsPerSecond:S.q>=1080?8e6:4e6},{...m},{}];
  let rec=null,lastErr=null,ch=[],recErr=null,done=null;
  for(let i=Math.min(recIdx,opts.length-1);i<opts.length;i++){
   try{ch=[];const r=new MediaRecorder(ms,opts[i]);r.ondataavailable=e=>e.data.size&&ch.push(e.data);r.onerror=e=>{recErr=e.error||e};
@@ -439,9 +439,9 @@ async function exportOne(f,mt){
    setTimeout(c,60)};c()});
  vid.pause();mus.pause();rec.stop();await done;origGain.gain.value=1;musGain.gain.value=0;
  if(stalled)throw new Error('travou')
- if(recErr&&!cancel)throw recErr
+ if(recErr&&!cancel){recIdx=Math.min(recIdx+1,opts.length-1);throw recErr}
  const blob=new Blob(ch,{type:mt.t||'video/webm'});
- if(!cancel&&blob.size<2000)throw new Error('gravação vazia');
+ if(!cancel&&blob.size<2000){recIdx=Math.min(recIdx+1,opts.length-1);throw new Error('gravação vazia')}
  return blob}
 function webmMt(){const t=['video/webm;codecs=vp9,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t));return t?{t,x:'webm'}:null}
 async function save(blob,name){
@@ -476,10 +476,10 @@ $('#go').onclick=async()=>{
   await detP.catch(()=>{})}
  if(cancel){$('#go').disabled=false;$('#stop').disabled=true;$('#msg').textContent='Cancelado.';return}
  exporting=true;
- const mt=pickMime();let n=0;const errs=[];$('#pg').value=0;
+ const mt=pickMime();let n=0;const errs=[];$('#errlog').textContent='Navegador: '+navigator.userAgent.slice(0,90)+' | formato: '+(mt.t||'padrão')+'\n';$('#errlog').style.display='none';$('#pg').value=0;
  for(const f of q){if(cancel)break;
   setSt(f,'gravando…');$('#msg').textContent=`Processando ${n+1} de ${q.length}: ${f.file.name}`;
-  try{let b,used=mt,lastE=null;const q0=S.q,ladder=[[mt,q0],[mt,Math.min(q0,720)],[webmMt(),Math.min(q0,720)],[webmMt(),480]];
+  try{let b,used=mt,lastE=null;const q0=S.q,ladder=[[mt,q0],[mt,q0],[mt,q0],[mt,q0],[mt,Math.min(q0,720)],[webmMt(),Math.min(q0,720)],[webmMt(),480]];
    for(const [m2,qq] of ladder){if(!m2||(b&&!lastE))continue;
     if(qq!==S.q){S.q=qq;applySize()}
     try{b=await exportOne(f,m2);used=m2;lastE=null;break}catch(e){lastE=e;b=null;$('#msg').textContent=`⚠ ${f.file.name}: ${e&&(e.message||e)} — tentando com configuração mais leve…`;if(cancel)break}}
@@ -487,7 +487,7 @@ $('#go').onclick=async()=>{
    if(lastE)throw lastE;
    if(cancel){setSt(f,'pendente');break}
    await save(b,fname(f,used.x));setSt(f,'ok')}
-  catch(e){f.err=(e&&(e.name?e.name+': ':'')+(e.message||e))||'erro';errs.push(f.err);console.error(f.file.name,e);setSt(f,'erro')}
+  catch(e){f.err=(e&&(e.name?e.name+': ':'')+(e.message||e))||'erro';errs.push(f.err);console.error(f.file.name,e);{const L=$('#errlog');L.style.display='block';L.textContent+=`${f.file.name}: ${f.err}\n`}setSt(f,'erro')}
   n++;$('#pg').value=n/q.length}
  exporting=false;curF=null;updStats();$('#go').disabled=false;$('#stop').disabled=true;
  $('#msg').textContent=cancel?'Cancelado. Clique em Processar para continuar de onde parou.':(errs.length?`Concluído com ${errs.length} erro(s). Motivo: ${errs[0]}. Clique em Processar para tentar de novo só os que falharam.`:'Concluído.')};
