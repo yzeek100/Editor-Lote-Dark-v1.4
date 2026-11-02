@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.5</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.6</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -205,12 +205,15 @@ function scene(c,W,H,src,vw,vh,f,guides){
 }
 function wrap(c,t,mw){const out=[];for(const p of String(t).split('\n')){let l='';for(const w of p.split(' ')){const n=l?l+' '+w:w;if(c.measureText(n).width>mw&&l){out.push(l);l=w}else l=n}out.push(l)}return out}
 function paintCard(f){const c=f.cc;if(!c)return;scene(c.getContext('2d'),c.width,c.height,f.frame||null,f.frame?f.frame.width:0,f.frame?f.frame.height:0,f,false)}
-(function loop(){
+function tick(){
  if(dirty){dirty=false;files.forEach(paintCard)}
  const f=exporting?curF:(files[sel]||null),ok=vid.readyState>1&&vid.videoWidth;
  scene(ctx,cv.width,cv.height,ok?vid:null,vid.videoWidth,vid.videoHeight,f,!exporting);
  $('#tm').textContent=vid.duration?vid.currentTime.toFixed(1)+' / '+vid.duration.toFixed(1)+' s':'';
- requestAnimationFrame(loop)})();
+}
+(function loop(){tick();requestAnimationFrame(loop)})();
+setInterval(()=>{if(document.hidden)tick()},40);
+window.addEventListener('beforeunload',e=>{if(exporting){e.preventDefault();e.returnValue=''}});
 
 // acha a maior faixa vazia (fundo liso) do template = onde o vídeo entra
 function detectFree(img){
@@ -414,7 +417,7 @@ async function exportOne(f,mt){
  const rec=new MediaRecorder(new MediaStream(tr),mt.t?{mimeType:mt.t,videoBitsPerSecond:S.q>=1080?8e6:4e6}:{});
  const ch=[];rec.ondataavailable=e=>e.data.size&&ch.push(e.data);
  const done=new Promise(r=>rec.onstop=r);
- await new Promise(r=>requestAnimationFrame(r));
+ await new Promise(r=>setTimeout(r,60));
  rec.start();await vid.play().catch(()=>{});
  let stalled=false;
  await new Promise(r=>{let lt=-1,lc=performance.now();const t0=lc,lim=((en-st)/S.speed+20)*1000;
@@ -422,7 +425,7 @@ async function exportOne(f,mt){
    if(vid.ended||vid.currentTime>=en||cancel)return r();
    if(vid.currentTime!==lt){lt=vid.currentTime;lc=now}
    if(now-lc>10000||now-t0>lim){stalled=true;return r()}
-   requestAnimationFrame(c)};c()});
+   setTimeout(c,60)};c()});
  vid.pause();mus.pause();rec.stop();await done;origGain.gain.value=1;musGain.gain.value=0;
  if(stalled)throw new Error('travou')
  return new Blob(ch,{type:mt.t||'video/webm'})}
@@ -446,6 +449,7 @@ $('#stop').onclick=()=>{cancel=true};
 $('#go').onclick=async()=>{
  const q=files.filter(f=>f.on&&f.st!=='ok');if(exporting)return;
  if(!q.length){$('#msg').textContent=files.length?'Nenhum vídeo selecionado ou pendente.':'Envie vídeos primeiro.';return}
+ $('#go').disabled=true;
  if(!dirH&&!askedDir&&window.showDirectoryPicker){askedDir=true;await pickDir()}
  let cnt=Math.max(0,...files.map(f=>f.num||0));for(const f of q)if(!f.num)f.num=++cnt;
  initAudio();cancel=false;$('#go').disabled=true;$('#stop').disabled=false;
