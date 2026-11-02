@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.6.3</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.6.4</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -450,7 +450,7 @@ async function exportOne(f,mt){
  return new Blob(ch,{type:mt.t||'video/webm'})}
 const DRV={tok:null,tc:null,q:[],ok:0};
 const dget=(k,d)=>{try{return localStorage.getItem(k)||d}catch(e){return d}},dset=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-$('#drvCid').value=dget('drvCid','');$('#drvFolder').value=dget('drvFolder',$('#drvFolder').value);$('#drvOn').checked=dget('drvOn','')==='1';
+$('#drvCid').value=dget('drvCid','728520825440-bsrhoq2itsajf76tke6649b0bah2khdn.apps.googleusercontent.com');$('#drvFolder').value=dget('drvFolder',$('#drvFolder').value);$('#drvOn').checked=dget('drvOn','')==='1';
 const dmsg=t=>{$('#drvMsg').textContent=t};
 function dstate(){dmsg(!$('#drvOn').checked?'Desligado. Os vídeos ficam só na pasta do PC.':DRV.tok?`✅ Conectado ao Drive. ${DRV.ok} enviado(s)${DRV.q.length?`, ${DRV.q.length} na fila`:''}.`:'Ligado, mas ainda não conectado: clique em Conectar.')}
 $('#drvOnly').checked=dget('drvOnly','')==='1';$('#drvOnly').onchange=()=>dset('drvOnly',$('#drvOnly').checked?'1':'0');
