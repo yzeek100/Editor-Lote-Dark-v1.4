@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.6</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.7</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -80,6 +80,8 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
   <div class="f"><label>Cantos arredondados (px):</label><input data-k="rad" type="range" min="0" max="80" value="0"><span class="v">0</span></div>
   <div class="f"><label>Qualidade de saída:</label>
    <div class="ck"><input type="radio" name="q" value="480">480p <input type="radio" name="q" value="720">720p <input type="radio" name="q" value="1080" checked>1080p (HD)</div></div>
+  <div class="f"><label>Qualidade da gravação (bitrate):</label><select data-k="br"><option value="8">Normal · 8 Mbps</option><option value="16" selected>Alta · 16 Mbps (recomendado)</option><option value="25">Máxima · 25 Mbps</option></select></div>
+  <div class="f"><label>Quadros por segundo:</label><select data-k="fps"><option value="30" selected>30 fps</option><option value="60">60 fps (se o vídeo original for 60)</option></select></div>
   <div class="ck"><input data-k="cover" type="checkbox">Sem bordas (preencher área)</div>
   <div class="ck"><input data-k="onTop" type="checkbox">Moldura (template por cima)</div>
   <div class="ck"><input data-k="mute" type="checkbox">Remover áudio de todos</div>
@@ -146,11 +148,11 @@ const cv=$('#cv'),ctx=cv.getContext('2d');
 const vid=document.createElement('video');vid.playsInline=true;vid.preload='auto';
 let autoBusy=false,wmImg=null,musics=[],crop=null,tpl=null,tplS=null,files=[],sel=-1,exporting=false,cancel=false,dirH=null,drag=null,off={x:0,y:0},curF=null,dirty=true;
 const box={x:0,y:.3,w:1,h:.7};
-const S={valign:'top',dy:0,zoom:1,bg:'#ffffff',cover:false,onTop:false,mute:false,speed:1,useCrop:false,autoCrop:false,sens:25,txt:false,tx:'Seu texto aqui',tsz:70,ty:12,tc:'#ffffff',enh:false,musOn:false,musRep:true,musVol:50,wmTxt:'',wmPos:'br',bw:0,bc:'#ffffff',rad:0,autoUp:true,wmSize:18,wmOp:80,start:0,cut:0,q:1080};
+const S={valign:'top',dy:0,zoom:1,bg:'#ffffff',cover:false,onTop:false,mute:false,speed:1,useCrop:false,autoCrop:false,sens:25,txt:false,tx:'Seu texto aqui',tsz:70,ty:12,tc:'#ffffff',enh:false,musOn:false,musRep:true,musVol:50,wmTxt:'',wmPos:'br',br:16,fps:30,bw:0,bc:'#ffffff',rad:0,autoUp:true,wmSize:18,wmOp:80,start:0,cut:0,q:1080};
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 function applySize(){const ar=tpl?tpl.naturalHeight/tpl.naturalWidth:16/9;
  cv.width=S.q;cv.height=Math.round(S.q*ar/2)*2;
- if(tpl){tplS=document.createElement('canvas');tplS.width=200;tplS.height=Math.round(200*ar);tplS.getContext('2d').drawImage(tpl,0,0,200,tplS.height)}else tplS=null;
+ if(tpl){tplS=document.createElement('canvas');tplS.width=300;tplS.height=Math.round(300*ar);{const g=tplS.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(tpl,0,0,300,tplS.height)}}else tplS=null;
  files.forEach(f=>{if(f.cc)f.cc.height=Math.round(f.cc.width*cv.height/cv.width)});dirty=true}
 applySize();
 
@@ -169,7 +171,8 @@ function initAudio(){if(ac){ac.resume();return}
 
 // desenha o quadro completo (template + vídeo + texto). f = ajustes do vídeo
 function scene(c,W,H,src,vw,vh,f,guides){
- const u=W/1080,T=(W<=260&&tplS)?tplS:tpl;
+ const u=W/1080,T=(W<=400&&tplS)?tplS:tpl;
+ c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
  c.fillStyle=S.bg;c.fillRect(0,0,W,H);
  if(T&&!S.onTop)c.drawImage(T,0,0,W,H);
  const bx=box.x*W,by=box.y*H,bw=box.w*W,bh=box.h*H;
@@ -273,8 +276,8 @@ function genInfo(){const n=files.filter(f=>f.frame||f.fail).length;$('#pgen').te
 async function runThumbs(){if(thumbBusy)return;thumbBusy=true;
  while(thumbQ.length){const f=thumbQ.shift();if(f.frame||!files.includes(f))continue;
   try{await loadV(tv,f.url);await seekV(tv,clamp(S.start+.1,0,Math.max(0,(tv.duration||1)-.05)));
-   const w=320,h=Math.round(w*tv.videoHeight/tv.videoWidth)||180,c=document.createElement('canvas');c.width=w;c.height=h;
-   c.getContext('2d').drawImage(tv,0,0,w,h);f.frame=c;paintCard(f);runAuto()}
+   const w=480,h=Math.round(w*tv.videoHeight/tv.videoWidth)||270,c=document.createElement('canvas');c.width=w;c.height=h;
+   {const g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(tv,0,0,w,h)}f.frame=c;paintCard(f);runAuto()}
   catch(e){f.fail=true}
   genInfo()}
  thumbBusy=false;genInfo()}
@@ -353,7 +356,7 @@ function renderGrid(){const G=$('#grid');G.innerHTML='';
  if(!files.length){G.innerHTML='<div class="empty">Selecione um template e envie vídeos</div>';count();genInfo();return}
  files.forEach((f,i)=>{
   const d=document.createElement('div');d.className='vc'+(i===sel?' on':'');
-  d.innerHTML=`<canvas width="200"></canvas><input type="checkbox" ${f.on?'checked':''}><span class="b">${f.st}</span><div class="n"></div>
+  d.innerHTML=`<canvas width="300"></canvas><input type="checkbox" ${f.on?'checked':''}><span class="b">${f.st}</span><div class="n"></div>
   <div class="mn"><div class="rw"><button data-a="sb" title="Sem bordas neste vídeo">SB</button><button data-a="mute" title="Áudio">${f.mute?'🔇':'🔊'}</button><button data-a="mot" title="Só o movimento">🎯</button><button class="d" data-a="del" title="Remover">🗑</button></div>
   <div class="rw gr"><button data-a="up" title="Subir">↑</button><button data-a="down" title="Descer">↓</button><button data-a="left" title="Esquerda">←</button><button data-a="right" title="Direita">→</button></div>
   <div class="rw"><button data-a="zm" title="Diminuir">−</button><button data-a="zp" title="Aumentar">+</button><button data-a="rs" title="Resetar">⟲</button></div></div>`;
@@ -413,8 +416,8 @@ async function exportOne(f,mt){
  await seek(st);vid.playbackRate=S.speed;gain.gain.value=0;
  origGain.gain.value=(mute||(mOn&&S.musRep))?0:1;musGain.gain.value=mOn?S.musVol/100:0;
  if(mOn){mus.src=musics[Math.floor(Math.random()*musics.length)].url;try{mus.currentTime=0;await mus.play()}catch(e){}}
- const tr=[...cv.captureStream(30).getVideoTracks()];if(mOn||!mute)tr.push(...dest.stream.getAudioTracks());
- const rec=new MediaRecorder(new MediaStream(tr),mt.t?{mimeType:mt.t,videoBitsPerSecond:S.q>=1080?8e6:4e6}:{});
+ const tr=[...cv.captureStream(+S.fps||30).getVideoTracks()];if(mOn||!mute)tr.push(...dest.stream.getAudioTracks());
+ const rec=new MediaRecorder(new MediaStream(tr),mt.t?{mimeType:mt.t,videoBitsPerSecond:Math.round(+S.br*1e6*(S.q>=1080?1:S.q>=720?.6:.35)),audioBitsPerSecond:192000}:{});
  const ch=[];rec.ondataavailable=e=>e.data.size&&ch.push(e.data);
  const done=new Promise(r=>rec.onstop=r);
  await new Promise(r=>setTimeout(r,60));
