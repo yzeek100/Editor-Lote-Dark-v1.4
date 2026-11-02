@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v2.0</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.6</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -80,13 +80,9 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
   <div class="f"><label>Cantos arredondados (px):</label><input data-k="rad" type="range" min="0" max="80" value="0"><span class="v">0</span></div>
   <div class="f"><label>Qualidade de saída:</label>
    <div class="ck"><input type="radio" name="q" value="480">480p <input type="radio" name="q" value="720">720p <input type="radio" name="q" value="1080" checked>1080p (HD)</div></div>
-  <div class="f"><label>Qualidade da gravação (bitrate):</label><select data-k="br"><option value="8">Normal · 8 Mbps</option><option value="16" selected>Alta · 16 Mbps (recomendado)</option><option value="25">Máxima · 25 Mbps</option></select></div>
-  <div class="f"><label>Quadros por segundo:</label><select data-k="fps"><option value="30" selected>30 fps</option><option value="60">60 fps (se o vídeo original for 60)</option></select></div>
   <div class="ck"><input data-k="cover" type="checkbox">Sem bordas (preencher área)</div>
   <div class="ck"><input data-k="onTop" type="checkbox">Moldura (template por cima)</div>
   <div class="ck"><input data-k="mute" type="checkbox">Remover áudio de todos</div>
-  <div class="ck"><input data-k="imgOn" type="checkbox">✨ Melhorar imagem (contraste, cor e nitidez leves)</div>
-  <div class="f"><label>Intensidade da melhoria:</label><select data-k="imgLv"><option value="1">Suave</option><option value="2" selected>Média</option><option value="3">Forte</option></select></div>
   <div class="ck"><input data-k="enh" type="checkbox">Melhorar áudio (voz clara e volume nivelado)</div>
   <div class="f"><label>Velocidade:</label><input data-k="speed" type="number" min="0.25" max="4" step="0.25" value="1"></div>
  </div>
@@ -117,7 +113,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
  <div class="bar">Tamanho: <select id="sz"><option value="120">Pequeno</option><option value="170" selected>Médio</option><option value="240">Grande</option></select>
   <button class="g sm" id="refresh">↻ Atualizar previews</button><button class="sm" id="all">☑ Todos</button><button class="sm" id="none">☐ Limpar</button><button class="r sm" id="clr">🗑 Remover todos</button></div>
  <div id="grid"><div class="empty">Selecione um template e envie vídeos</div></div>
- <div id="errlog" style="display:none;background:#3a1620;border:1px solid #c0392b;border-radius:8px;padding:8px;margin:6px 0;font-size:12px;white-space:pre-wrap;max-height:140px;overflow:auto"></div><progress id="pg" value="0" max="1"></progress><div class="note" id="msg">Cada vídeo é gravado em tempo real. Mantenha a aba aberta e visível. Use Chrome ou Edge.</div>
+ <progress id="pg" value="0" max="1"></progress><div class="note" id="msg">Cada vídeo é gravado em tempo real. Mantenha a aba aberta e visível. Use Chrome ou Edge.</div>
 </section>
 <aside class="col">
  <h1 style="font-size:16px">👁 Preview</h1><div class="sub">Visualização em tempo real · arraste a área tracejada</div>
@@ -150,11 +146,11 @@ const cv=$('#cv'),ctx=cv.getContext('2d');
 const vid=document.createElement('video');vid.playsInline=true;vid.preload='auto';
 let autoBusy=false,wmImg=null,musics=[],crop=null,tpl=null,tplS=null,files=[],sel=-1,exporting=false,cancel=false,dirH=null,drag=null,off={x:0,y:0},curF=null,dirty=true;
 const box={x:0,y:.3,w:1,h:.7};
-const S={imgOn:false,imgLv:'2',valign:'top',dy:0,zoom:1,bg:'#ffffff',cover:false,onTop:false,mute:false,speed:1,useCrop:false,autoCrop:false,sens:25,txt:false,tx:'Seu texto aqui',tsz:70,ty:12,tc:'#ffffff',enh:false,musOn:false,musRep:true,musVol:50,wmTxt:'',wmPos:'br',br:16,fps:30,bw:0,bc:'#ffffff',rad:0,autoUp:true,wmSize:18,wmOp:80,start:0,cut:0,q:1080};
+const S={valign:'top',dy:0,zoom:1,bg:'#ffffff',cover:false,onTop:false,mute:false,speed:1,useCrop:false,autoCrop:false,sens:25,txt:false,tx:'Seu texto aqui',tsz:70,ty:12,tc:'#ffffff',enh:false,musOn:false,musRep:true,musVol:50,wmTxt:'',wmPos:'br',bw:0,bc:'#ffffff',rad:0,autoUp:true,wmSize:18,wmOp:80,start:0,cut:0,q:1080};
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 function applySize(){const ar=tpl?tpl.naturalHeight/tpl.naturalWidth:16/9;
  cv.width=S.q;cv.height=Math.round(S.q*ar/2)*2;
- if(tpl){tplS=document.createElement('canvas');tplS.width=300;tplS.height=Math.round(300*ar);{const g=tplS.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(tpl,0,0,300,tplS.height)}}else tplS=null;
+ if(tpl){tplS=document.createElement('canvas');tplS.width=200;tplS.height=Math.round(200*ar);tplS.getContext('2d').drawImage(tpl,0,0,200,tplS.height)}else tplS=null;
  files.forEach(f=>{if(f.cc)f.cc.height=Math.round(f.cc.width*cv.height/cv.width)});dirty=true}
 applySize();
 
@@ -173,8 +169,7 @@ function initAudio(){if(ac){ac.resume();return}
 
 // desenha o quadro completo (template + vídeo + texto). f = ajustes do vídeo
 function scene(c,W,H,src,vw,vh,f,guides){
- const u=W/1080,T=(W<=400&&tplS)?tplS:tpl;
- c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
+ const u=W/1080,T=(W<=260&&tplS)?tplS:tpl;
  c.fillStyle=S.bg;c.fillRect(0,0,W,H);
  if(T&&!S.onTop)c.drawImage(T,0,0,W,H);
  const bx=box.x*W,by=box.y*H,bw=box.w*W,bh=box.h*H;
@@ -187,8 +182,7 @@ function scene(c,W,H,src,vw,vh,f,guides){
   const x=bx+(bw-dw)/2+ox,y=(S.valign==='top'&&dh<bh)?by+oy:by+(bh-dh)/2+oy;
   c.save();c.beginPath();c.rect(bx,by,bw,bh);c.clip();
   if(S.rad>0){c.beginPath();c.roundRect(x,y,dw,dh,S.rad*u);c.clip()}
-  const lv=+S.imgLv||2;if(S.imgOn&&'filter' in c)c.filter=`contrast(${1+.03*lv}) saturate(${1+.05*lv}) brightness(${1+.01*lv})`;
-  c.drawImage(src,sx,sy,sw,sh,x,y,dw,dh);c.filter='none';
+  c.drawImage(src,sx,sy,sw,sh,x,y,dw,dh);
   if(S.bw>0){c.lineWidth=S.bw*2*u;c.strokeStyle=S.bc;if(S.rad>0){c.beginPath();c.roundRect(x,y,dw,dh,S.rad*u);c.stroke()}else c.strokeRect(x,y,dw,dh)}
   c.restore()}
  if(T&&S.onTop)c.drawImage(T,0,0,W,H);
@@ -279,8 +273,8 @@ function genInfo(){const n=files.filter(f=>f.frame||f.fail).length;$('#pgen').te
 async function runThumbs(){if(thumbBusy)return;thumbBusy=true;
  while(thumbQ.length){const f=thumbQ.shift();if(f.frame||!files.includes(f))continue;
   try{await loadV(tv,f.url);await seekV(tv,clamp(S.start+.1,0,Math.max(0,(tv.duration||1)-.05)));
-   const w=480,h=Math.round(w*tv.videoHeight/tv.videoWidth)||270,c=document.createElement('canvas');c.width=w;c.height=h;
-   {const g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(tv,0,0,w,h)}f.frame=c;paintCard(f);runAuto()}
+   const w=320,h=Math.round(w*tv.videoHeight/tv.videoWidth)||180,c=document.createElement('canvas');c.width=w;c.height=h;
+   c.getContext('2d').drawImage(tv,0,0,w,h);f.frame=c;paintCard(f);runAuto()}
   catch(e){f.fail=true}
   genInfo()}
  thumbBusy=false;genInfo()}
@@ -359,7 +353,7 @@ function renderGrid(){const G=$('#grid');G.innerHTML='';
  if(!files.length){G.innerHTML='<div class="empty">Selecione um template e envie vídeos</div>';count();genInfo();return}
  files.forEach((f,i)=>{
   const d=document.createElement('div');d.className='vc'+(i===sel?' on':'');
-  d.innerHTML=`<canvas width="300"></canvas><input type="checkbox" ${f.on?'checked':''}><span class="b">${f.st}</span><div class="n"></div>
+  d.innerHTML=`<canvas width="200"></canvas><input type="checkbox" ${f.on?'checked':''}><span class="b">${f.st}</span><div class="n"></div>
   <div class="mn"><div class="rw"><button data-a="sb" title="Sem bordas neste vídeo">SB</button><button data-a="mute" title="Áudio">${f.mute?'🔇':'🔊'}</button><button data-a="mot" title="Só o movimento">🎯</button><button class="d" data-a="del" title="Remover">🗑</button></div>
   <div class="rw gr"><button data-a="up" title="Subir">↑</button><button data-a="down" title="Descer">↓</button><button data-a="left" title="Esquerda">←</button><button data-a="right" title="Direita">→</button></div>
   <div class="rw"><button data-a="zm" title="Diminuir">−</button><button data-a="zp" title="Aumentar">+</button><button data-a="rs" title="Resetar">⟲</button></div></div>`;
@@ -371,7 +365,7 @@ function renderGrid(){const G=$('#grid');G.innerHTML='';
   if(!f.frame&&!f.fail&&!thumbQ.includes(f))thumbQ.push(f);G.append(d)});
  count();genInfo();runThumbs()}
 const numLabel=f=>f.num?fname(f,'').replace(/\.$/,'')+' ← '+f.file.name:f.file.name;
-function setSt(f,s){f.st=s;updStats();if(f.num&&f.el){const n=f.el.querySelector('.n');if(n)n.textContent=numLabel(f)}if(f.badge&&f.el&&f.el.isConnected){f.badge.textContent=s;f.badge.title=s==='erro'&&f.err?f.err:'';f.badge.className='b '+(s==='ok'?'ok':s==='erro'?'er':'')}}
+function setSt(f,s){f.st=s;updStats();if(f.num&&f.el){const n=f.el.querySelector('.n');if(n)n.textContent=numLabel(f)}if(f.badge&&f.el&&f.el.isConnected){f.badge.textContent=s;f.badge.className='b '+(s==='ok'?'ok':s==='erro'?'er':'')}}
 async function pick(i){if(exporting||i<0)return;sel=i;files.forEach((f,j)=>f.el&&f.el.classList.toggle('on',j===i));vid.pause();
  try{await loadVid(files[i].url);await seek(clamp(S.start,0,vid.duration-.1))}catch(e){}}
 $('#fvid').onchange=e=>{initAudio();
@@ -412,7 +406,6 @@ $('#play').onclick=()=>preview(false);$('#apply').onclick=()=>preview(true);$('#
 // exportação
 function pickMime(){return[['video/mp4;codecs=avc1,mp4a.40.2','mp4'],['video/webm;codecs=vp9,opus','webm'],['video/webm','webm']]
  .map(([t,x])=>({t,x})).find(o=>MediaRecorder.isTypeSupported(o.t))||{t:'',x:'webm'}}
-let recIdx=0;
 async function exportOne(f,mt){
  curF=f;await loadVid(f.url);
  if(S.useCrop&&S.autoCrop&&!f.crop){try{const r=await detectMotion(f.url);if(r)f.crop=r}catch(e){}}
@@ -420,16 +413,12 @@ async function exportOne(f,mt){
  await seek(st);vid.playbackRate=S.speed;gain.gain.value=0;
  origGain.gain.value=(mute||(mOn&&S.musRep))?0:1;musGain.gain.value=mOn?S.musVol/100:0;
  if(mOn){mus.src=musics[Math.floor(Math.random()*musics.length)].url;try{mus.currentTime=0;await mus.play()}catch(e){}}
- const tr=[...cv.captureStream(+S.fps||30).getVideoTracks()];if(mOn||!mute)tr.push(...dest.stream.getAudioTracks());
- const ms=new MediaStream(tr),sc=S.q>=1080?1:S.q>=720?.6:.35,vb=Math.round(+S.br*1e6*sc),lo=Math.round(8e6*sc),m=mt.t?{mimeType:mt.t}:{};
- const opts=[{...m,videoBitsPerSecond:vb,audioBitsPerSecond:192000},{...m,videoBitsPerSecond:vb},{...m,videoBitsPerSecond:S.q>=1080?8e6:4e6},{...m},{}];
- let rec=null,lastErr=null,ch=[],recErr=null,done=null;
- for(let i=Math.min(recIdx,opts.length-1);i<opts.length;i++){
-  try{ch=[];const r=new MediaRecorder(ms,opts[i]);r.ondataavailable=e=>e.data.size&&ch.push(e.data);r.onerror=e=>{recErr=e.error||e};
-   done=new Promise(res=>r.onstop=res);await new Promise(res=>setTimeout(res,60));r.start();rec=r;recIdx=i;break}
-  catch(e){lastErr=e;rec=null}}
- if(!rec)throw lastErr||new Error('MediaRecorder indisponível');
- await vid.play().catch(()=>{});
+ const tr=[...cv.captureStream(30).getVideoTracks()];if(mOn||!mute)tr.push(...dest.stream.getAudioTracks());
+ const rec=new MediaRecorder(new MediaStream(tr),mt.t?{mimeType:mt.t,videoBitsPerSecond:S.q>=1080?8e6:4e6}:{});
+ const ch=[];rec.ondataavailable=e=>e.data.size&&ch.push(e.data);
+ const done=new Promise(r=>rec.onstop=r);
+ await new Promise(r=>setTimeout(r,60));
+ rec.start();await vid.play().catch(()=>{});
  let stalled=false;
  await new Promise(r=>{let lt=-1,lc=performance.now();const t0=lc,lim=((en-st)/S.speed+20)*1000;
   const c=()=>{const now=performance.now();
@@ -439,11 +428,7 @@ async function exportOne(f,mt){
    setTimeout(c,60)};c()});
  vid.pause();mus.pause();rec.stop();await done;origGain.gain.value=1;musGain.gain.value=0;
  if(stalled)throw new Error('travou')
- if(recErr&&!cancel){recIdx=Math.min(recIdx+1,opts.length-1);throw recErr}
- const blob=new Blob(ch,{type:mt.t||'video/webm'});
- if(!cancel&&blob.size<2000){recIdx=Math.min(recIdx+1,opts.length-1);throw new Error('gravação vazia')}
- return blob}
-function webmMt(){const t=['video/webm;codecs=vp9,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t));return t?{t,x:'webm'}:null}
+ return new Blob(ch,{type:mt.t||'video/webm'})}
 async function save(blob,name){
  if(dirH){const fh=await dirH.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(blob);await w.close();return}
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();
@@ -476,19 +461,13 @@ $('#go').onclick=async()=>{
   await detP.catch(()=>{})}
  if(cancel){$('#go').disabled=false;$('#stop').disabled=true;$('#msg').textContent='Cancelado.';return}
  exporting=true;
- const mt=pickMime();let n=0;const errs=[];$('#errlog').textContent='Navegador: '+navigator.userAgent.slice(0,90)+' | formato: '+(mt.t||'padrão')+'\n';$('#errlog').style.display='none';$('#pg').value=0;
+ const mt=pickMime();let n=0;$('#pg').value=0;
  for(const f of q){if(cancel)break;
   setSt(f,'gravando…');$('#msg').textContent=`Processando ${n+1} de ${q.length}: ${f.file.name}`;
-  try{let b,used=mt,lastE=null;const q0=S.q,ladder=[[mt,q0],[mt,q0],[mt,q0],[mt,q0],[mt,Math.min(q0,720)],[webmMt(),Math.min(q0,720)],[webmMt(),480]];
-   for(const [m2,qq] of ladder){if(!m2||(b&&!lastE))continue;
-    if(qq!==S.q){S.q=qq;applySize()}
-    try{b=await exportOne(f,m2);used=m2;lastE=null;break}catch(e){lastE=e;b=null;$('#msg').textContent=`⚠ ${f.file.name}: ${e&&(e.message||e)} — tentando com configuração mais leve…`;if(cancel)break}}
-   if(S.q!==q0){S.q=q0;applySize()}
-   if(lastE)throw lastE;
-   if(cancel){setSt(f,'pendente');break}
-   await save(b,fname(f,used.x));setSt(f,'ok')}
-  catch(e){f.err=(e&&(e.name?e.name+': ':'')+(e.message||e))||'erro';errs.push(f.err);console.error(f.file.name,e);{const L=$('#errlog');L.style.display='block';L.textContent+=`${f.file.name}: ${f.err}\n`}setSt(f,'erro')}
+  try{const b=await exportOne(f,mt);if(cancel){setSt(f,'pendente');break}
+   await save(b,fname(f,mt.x));setSt(f,'ok')}
+  catch(e){setSt(f,'erro')}
   n++;$('#pg').value=n/q.length}
  exporting=false;curF=null;updStats();$('#go').disabled=false;$('#stop').disabled=true;
- $('#msg').textContent=cancel?'Cancelado. Clique em Processar para continuar de onde parou.':(errs.length?`Concluído com ${errs.length} erro(s). Motivo: ${errs[0]}. Clique em Processar para tentar de novo só os que falharam.`:'Concluído.')};
+ $('#msg').textContent=cancel?'Cancelado. Clique em Processar para continuar de onde parou.':'Concluído.'};
 </script></body></html>
