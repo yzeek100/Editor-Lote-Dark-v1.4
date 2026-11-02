@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.8</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.9</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -443,6 +443,7 @@ async function exportOne(f,mt){
  const blob=new Blob(ch,{type:mt.t||'video/webm'});
  if(!cancel&&blob.size<2000)throw new Error('gravação vazia');
  return blob}
+function webmMt(){const t=['video/webm;codecs=vp9,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t));return t?{t,x:'webm'}:null}
 async function save(blob,name){
  if(dirH){const fh=await dirH.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(blob);await w.close();return}
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();
@@ -478,8 +479,14 @@ $('#go').onclick=async()=>{
  const mt=pickMime();let n=0;const errs=[];$('#pg').value=0;
  for(const f of q){if(cancel)break;
   setSt(f,'gravando…');$('#msg').textContent=`Processando ${n+1} de ${q.length}: ${f.file.name}`;
-  try{const b=await exportOne(f,mt);if(cancel){setSt(f,'pendente');break}
-   await save(b,fname(f,mt.x));setSt(f,'ok')}
+  try{let b,used=mt,lastE=null;const q0=S.q,ladder=[[mt,q0],[mt,Math.min(q0,720)],[webmMt(),Math.min(q0,720)],[webmMt(),480]];
+   for(const [m2,qq] of ladder){if(!m2||(b&&!lastE))continue;
+    if(qq!==S.q){S.q=qq;applySize()}
+    try{b=await exportOne(f,m2);used=m2;lastE=null;break}catch(e){lastE=e;b=null;$('#msg').textContent=`⚠ ${f.file.name}: ${e&&(e.message||e)} — tentando com configuração mais leve…`;if(cancel)break}}
+   if(S.q!==q0){S.q=q0;applySize()}
+   if(lastE)throw lastE;
+   if(cancel){setSt(f,'pendente');break}
+   await save(b,fname(f,used.x));setSt(f,'ok')}
   catch(e){f.err=(e&&(e.name?e.name+': ':'')+(e.message||e))||'erro';errs.push(f.err);console.error(f.file.name,e);setSt(f,'erro')}
   n++;$('#pg').value=n/q.length}
  exporting=false;curF=null;updStats();$('#go').disabled=false;$('#stop').disabled=true;
