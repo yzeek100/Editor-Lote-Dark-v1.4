@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.6.1</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.6.2</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -66,6 +66,11 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
  <button id="bVid">📥 Enviar vídeos (até 200)</button><input id="fvid" type="file" accept="video/*" multiple>
  <button id="bTpl">🖼️ Selecionar template</button><input id="ftpl" type="file" accept="image/*">
  <button id="bNo">🚫 Sem template</button>
+ <div class="f" id="drv" style="border:1px solid #2a3350;border-radius:8px;padding:8px;margin:4px 0 8px">
+  <div class="ck"><input id="drvOn" type="checkbox">☁️ Enviar também para o Google Drive</div>
+  <label style="font-size:11px;opacity:.8">ID da pasta do Drive:</label><input id="drvFolder" value="1QXCxuvUnalen0oOMxJhR0Jz9DoVC6EUB">
+  <label style="font-size:11px;opacity:.8">Google Client ID (OAuth):</label><input id="drvCid" placeholder="xxxx.apps.googleusercontent.com">
+  <button id="drvBtn" class="sm">🔗 Conectar ao Drive</button><div class="note" id="drvMsg">Desligado. Os vídeos ficam só na pasta do PC.</div></div>
  <button id="bDir">📁 Criar pasta de saída no PC</button><div class="note" id="dirn" style="margin:-2px 0 6px">Cria a pasta "Videos Editados" no local que você escolher. Sem pasta: baixa cada arquivo.</div>
  <div class="f" style="margin:0 0 8px"><label>Nome dos arquivos (video 01, video 02…):</label><input id="pref" type="text" value="video"></div>
  <button class="g big" id="go">▶ PROCESSAR VÍDEOS</button><button class="r" id="stop" disabled>Cancelar</button>
@@ -443,6 +448,27 @@ async function exportOne(f,mt){
  vid.pause();mus.pause();rec.stop();await done;origGain.gain.value=1;musGain.gain.value=0;
  if(stalled)throw new Error('travou')
  return new Blob(ch,{type:mt.t||'video/webm'})}
+const DRV={tok:null,tc:null,q:[],ok:0};
+const dget=(k,d)=>{try{return localStorage.getItem(k)||d}catch(e){return d}},dset=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+$('#drvCid').value=dget('drvCid','');$('#drvFolder').value=dget('drvFolder',$('#drvFolder').value);$('#drvOn').checked=dget('drvOn','')==='1';
+const dmsg=t=>{$('#drvMsg').textContent=t};
+function dstate(){dmsg(!$('#drvOn').checked?'Desligado. Os vídeos ficam só na pasta do PC.':DRV.tok?`✅ Conectado ao Drive. ${DRV.ok} enviado(s)${DRV.q.length?`, ${DRV.q.length} na fila`:''}.`:'Ligado, mas ainda não conectado: clique em Conectar.')}
+$('#drvOn').onchange=()=>{dset('drvOn',$('#drvOn').checked?'1':'0');dstate()};
+$('#drvCid').onchange=()=>dset('drvCid',$('#drvCid').value.trim());$('#drvFolder').onchange=()=>dset('drvFolder',$('#drvFolder').value.trim());
+function gis(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.onload=res;sc.onerror=()=>rej(new Error('não carregou o login do Google'));document.head.append(sc)})}
+$('#drvBtn').onclick=async()=>{const cid=$('#drvCid').value.trim();dset('drvCid',cid);
+ if(!/\.apps\.googleusercontent\.com$/.test(cid)){dmsg('Cole o Client ID do Google (termina com .apps.googleusercontent.com).');return}
+ try{await gis();DRV.tc=google.accounts.oauth2.initTokenClient({client_id:cid,scope:'https://www.googleapis.com/auth/drive.file',callback:async r=>{if(r.error){dmsg('Erro do Google: '+r.error);return}DRV.tok=r.access_token;$('#drvOn').checked=true;dset('drvOn','1');dstate();await dflush()}});
+  DRV.tc.requestAccessToken({prompt:DRV.tok?'':'consent'})}catch(e){dmsg('Erro: '+e.message)}};
+async function dup1(blob,name){
+ const meta={name,parents:[$('#drvFolder').value.trim()]};
+ const r1=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true',{method:'POST',headers:{Authorization:'Bearer '+DRV.tok,'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':blob.type||'video/mp4'},body:JSON.stringify(meta)});
+ if(r1.status===401){DRV.tok=null;throw new Error('sessão do Google expirou')}
+ if(!r1.ok)throw new Error('Drive recusou ('+r1.status+')');
+ const r2=await fetch(r1.headers.get('Location'),{method:'PUT',headers:{'Content-Type':blob.type||'video/mp4'},body:blob});
+ if(!r2.ok)throw new Error('falha no envio ('+r2.status+')')}
+async function dflush(){while(DRV.q.length&&DRV.tok){const it=DRV.q[0];try{await dup1(it.blob,it.name);DRV.q.shift();DRV.ok++;dstate()}catch(e){dmsg('⚠ '+e.message+(DRV.tok?'':' — clique em Conectar de novo; '+DRV.q.length+' vídeo(s) aguardam na fila.'));return}}}
+async function toDrive(blob,name){if(!$('#drvOn').checked)return;DRV.q.push({blob,name});if(!DRV.tok){dstate();return}await dflush()}
 async function save(blob,name){
  if(dirH){const fh=await dirH.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(blob);await w.close();return}
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();
@@ -479,7 +505,7 @@ $('#go').onclick=async()=>{
  for(const f of q){if(cancel)break;
   setSt(f,'gravando…');$('#msg').textContent=`Processando ${n+1} de ${q.length}: ${f.file.name}`;
   try{const b=await exportOne(f,mt);if(cancel){setSt(f,'pendente');break}
-   await save(b,fname(f,mt.x));setSt(f,'ok')}
+   {const nm=fname(f,mt.x);await save(b,nm);toDrive(b,nm).catch(()=>{});setSt(f,'ok')}}
   catch(e){setSt(f,'erro')}
   n++;$('#pg').value=n/q.length}
  exporting=false;curF=null;updStats();$('#go').disabled=false;$('#stop').disabled=true;
