@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.6.4</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.6.5</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -105,6 +105,10 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
   <div class="ck"><input data-k="musRep" type="checkbox" checked>Substituir áudio original</div>
   <div class="f"><label>Volume da música:</label><input data-k="musVol" type="range" min="0" max="100" value="50"><span class="v">50</span></div>
   <h3>💧 Marca d'água</h3>
+  <div class="f" style="border:1px solid #2a3350;border-radius:8px;padding:8px;margin:4px 0 8px"><label>🖼️ Capa (aparece no começo de todos os vídeos):</label>
+   <button id="bCapa">Escolher imagem da capa</button><input id="fcapa" type="file" accept="image/*" hidden>
+   <select id="capaDur"><option value="0.3">Capa por 0,3 s</option><option value="0.5" selected>Capa por 0,5 s</option><option value="1">Capa por 1 s</option><option value="2">Capa por 2 s</option></select>
+   <button id="vCapa" class="sm">👁 Ver capa</button><button id="clrCapa" class="sm">Remover capa</button><div class="note" id="capaMsg">Sem capa.</div></div>
   <button id="bWm">💧 Escolher logo (imagem)</button><input id="fwm" type="file" accept="image/*"><button id="clrWm">Remover logo</button>
   <div class="f"><label>Texto (ex.: @seuperfil):</label><input data-k="wmTxt" type="text" value=""></div>
   <div class="f"><label>Posição:</label><select data-k="wmPos"><option value="br">Canto inferior direito</option><option value="bl">Canto inferior esquerdo</option><option value="tr">Canto superior direito</option><option value="tl">Canto superior esquerdo</option><option value="bc">Centro embaixo</option><option value="cc">Centro</option></select></div>
@@ -149,7 +153,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 const $=s=>document.querySelector(s);
 const cv=$('#cv'),ctx=cv.getContext('2d');
 const vid=document.createElement('video');vid.playsInline=true;vid.preload='auto';
-let autoBusy=false,wmImg=null,musics=[],crop=null,tpl=null,tplS=null,files=[],sel=-1,exporting=false,cancel=false,dirH=null,drag=null,off={x:0,y:0},curF=null,dirty=true;
+let capaImg=null,capaUntil=0,autoBusy=false,wmImg=null,musics=[],crop=null,tpl=null,tplS=null,files=[],sel=-1,exporting=false,cancel=false,dirH=null,drag=null,off={x:0,y:0},curF=null,dirty=true;
 const box={x:0,y:.3,w:1,h:.7};
 const S={valign:'top',dy:0,zoom:1,bg:'#ffffff',cover:false,onTop:false,mute:false,speed:1,useCrop:false,autoCrop:false,sens:25,txt:false,tx:'Seu texto aqui',tsz:70,ty:12,tc:'#ffffff',enh:false,musOn:false,musRep:true,musVol:50,wmTxt:'',wmPos:'br',bw:0,bc:'#ffffff',rad:0,autoUp:true,wmSize:18,wmOp:80,start:0,cut:0,q:1080};
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -213,6 +217,7 @@ function paintCard(f){const c=f.cc;if(!c)return;scene(c.getContext('2d'),c.width
 function tick(){
  if(dirty){dirty=false;files.forEach(paintCard)}
  const f=exporting?curF:(files[sel]||null),ok=vid.readyState>1&&vid.videoWidth;
+ if(capaImg&&performance.now()<capaUntil){const W=cv.width,H=cv.height,r=Math.max(W/capaImg.naturalWidth,H/capaImg.naturalHeight),w=capaImg.naturalWidth*r,h=capaImg.naturalHeight*r;ctx.save();ctx.imageSmoothingQuality='high';ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.drawImage(capaImg,(W-w)/2,(H-h)/2,w,h);ctx.restore();$('#tm').textContent='capa';return}
  scene(ctx,cv.width,cv.height,ok?vid:null,vid.videoWidth,vid.videoHeight,f,!exporting);
  $('#tm').textContent=vid.duration?vid.currentTime.toFixed(1)+' / '+vid.duration.toFixed(1)+' s':'';
 }
@@ -383,6 +388,10 @@ $('#fmus').onchange=e=>{for(const f of e.target.files)musics.push({name:f.name,u
  $('#musn').textContent=musics.length+' música(s): '+musics.map(m=>m.name).join(', ').slice(0,90)};
 $('#bWm').onclick=()=>$('#fwm').click();
 $('#fwm').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{wmImg=im;dirty=true};im.src=URL.createObjectURL(f);e.target.value=''};
+$('#bCapa').onclick=()=>$('#fcapa').click();
+$('#fcapa').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{capaImg=im;$('#capaMsg').textContent=`✅ Capa carregada (${im.naturalWidth}×${im.naturalHeight}). Vai no começo de todos os vídeos.`;capaUntil=performance.now()+1500};im.onerror=()=>{$('#capaMsg').textContent='Não consegui abrir essa imagem.'};im.src=URL.createObjectURL(f);e.target.value=''};
+$('#vCapa').onclick=()=>{if(!capaImg){$('#capaMsg').textContent='Escolha uma imagem primeiro.';return}capaUntil=performance.now()+1500};
+$('#clrCapa').onclick=()=>{capaImg=null;capaUntil=0;$('#capaMsg').textContent='Sem capa.'};
 $('#clrWm').onclick=()=>{wmImg=null;dirty=true};
 $('#applyHeads').onclick=()=>{const L=$('#heads').value.split('\n').map(x=>x.trim()).filter(Boolean);
  if(!L.length||!files.length){$('#msg').textContent='Escreva as headlines e envie os vídeos primeiro.';return}
@@ -437,7 +446,9 @@ async function exportOne(f,mt){
  const ch=[];rec.ondataavailable=e=>e.data.size&&ch.push(e.data);
  const done=new Promise(r=>rec.onstop=r);
  await new Promise(r=>setTimeout(r,60));
- rec.start();await vid.play().catch(()=>{});
+ rec.start();
+ if(capaImg){const cd=Math.round((+$('#capaDur').value||.5)*1000);capaUntil=performance.now()+cd;await new Promise(r=>setTimeout(r,cd+80))}
+ await vid.play().catch(()=>{});
  let stalled=false;
  await new Promise(r=>{let lt=-1,lc=performance.now();const t0=lc,lim=((en-st)/S.speed+20)*1000;
   const c=()=>{const now=performance.now();
