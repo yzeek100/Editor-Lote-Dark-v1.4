@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.6.6</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.6.7</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -121,7 +121,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
  <div class="bar"><span class="chip">🎬 Aba 1</span><span style="flex:1"></span><span class="note" id="pgen"></span><span class="note" id="cnt">0 vídeo(s)</span></div>
  <div class="stats" id="stats"><span class="pill s-ok">✅<b id="sOk">0</b><span id="lOk">prontos</span></span><span class="pill s-wt">⏳<b id="sWt">0</b><span id="lWt">faltam</span></span><span class="pill s-run" id="pRun" hidden>🎬 gravando…</span><span class="pill s-er" id="pEr" hidden>⚠️<b id="sEr">0</b><span id="lEr">com erro</span></span><span class="pill s-done" id="pDone" hidden>🎉 Tudo pronto!</span></div>
  <div class="bar">Tamanho: <select id="sz"><option value="120">Pequeno</option><option value="170" selected>Médio</option><option value="240">Grande</option></select>
-  <button class="g sm" id="refresh">↻ Atualizar previews</button><button class="sm" id="all">☑ Todos</button><button class="sm" id="none">☐ Limpar</button><button class="sm" id="dup" title="Procura vídeos repetidos entre os que você enviou">🔁 Duplicados</button><button class="r sm" id="clr">🗑 Remover todos</button></div>
+  <button class="g sm" id="refresh">↻ Atualizar previews</button><button class="sm" id="all">☑ Todos</button><button class="sm" id="none">☐ Limpar</button><button class="sm" id="dup" title="Procura vídeos repetidos entre os que você enviou">🔁 Duplicados</button><button class="sm" id="plan" title="Gera uma planilha com arquivo, legenda, dia e horário de cada post, para você agendar no agendador do Instagram">📅 Plano de postagem</button><button class="r sm" id="clr">🗑 Remover todos</button></div>
  <div id="grid"><div class="empty">Selecione um template e envie vídeos</div></div>
  <progress id="pg" value="0" max="1"></progress><div class="note" id="msg">Cada vídeo é gravado em tempo real. Mantenha a aba aberta e visível. Use Chrome ou Edge.</div>
 </section>
@@ -415,6 +415,16 @@ $('#dup').onclick=async()=>{if(!files.length){$('#msg').textContent='Envie víde
  dups.forEach(f=>f.on=false);renderGrid();
  files.forEach(f=>{if(f.dupOf&&f.el){const e=document.createElement('span');e.className='dupb';e.textContent='🔁 repetido';e.style.cssText='position:absolute;bottom:34px;left:6px;background:#b8860b;color:#fff;padding:1px 7px;border-radius:9px;font-size:10px';f.el.append(e)}});
  $('#msg').textContent=dups.length?`🔁 ${dups.length} vídeo(s) repetido(s) encontrado(s) e desmarcado(s): ${dups.slice(0,4).map(f=>f.file.name).join(', ')}${dups.length>4?'…':''}. Marque de novo se quiser processar.`:'✅ Nenhum vídeo repetido entre os enviados.'};
+$('#plan').onclick=()=>{
+ const L=files.filter(f=>f.on||f.st==='ok');if(!L.length){$('#msg').textContent='Marque ou processe vídeos primeiro.';return}
+ const pd=+(prompt('Quantos posts por dia? (1 a 5)','2')||0);if(!pd||pd<1||pd>5)return;
+ const d0=prompt('Data do primeiro post (AAAA-MM-DD)',new Date(Date.now()+864e5).toISOString().slice(0,10));if(!d0||!/^\d{4}-\d{2}-\d{2}$/.test(d0))return;
+ const hrs=['09:00','13:00','17:00','20:00','22:00'].slice(0,pd===1?1:pd===2?2:pd);const slots=pd===2?['10:00','19:00']:pd===1?['12:00']:hrs;
+ const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';let rows=[['ordem','arquivo','legenda','data','hora']],i=0;
+ for(const f of L){const day=new Date(d0+'T12:00:00');day.setDate(day.getDate()+Math.floor(i/pd));rows.push([i+1,f.num?fname(f,'').replace(/\.$/,''):f.file.name,f.text||'',day.toISOString().slice(0,10),slots[i%pd]]);i++}
+ const csv='\ufeff'+rows.map(r=>r.map(q).join(';')).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='plano de postagem.csv';document.body.append(a);a.click();a.remove();
+ $('#msg').textContent=`📅 Plano gerado: ${L.length} post(s), ${pd} por dia. Use no agendador oficial do Instagram.`};
 $('#none').onclick=()=>{files.forEach(f=>f.on=false);renderGrid()};
 $('#clr').onclick=()=>{if(exporting)return;files.forEach(f=>URL.revokeObjectURL(f.url));files=[];sel=-1;vid.removeAttribute('src');renderGrid()};
 async function preview(fromStart){if(!files.length)return;if(sel<0)await pick(0);initAudio();
