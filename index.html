@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.6.2</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.6.3</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -68,7 +68,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
  <button id="bNo">🚫 Sem template</button>
  <div class="f" id="drv" style="border:1px solid #2a3350;border-radius:8px;padding:8px;margin:4px 0 8px">
   <div class="ck"><input id="drvOn" type="checkbox">☁️ Enviar também para o Google Drive</div>
-  <label style="font-size:11px;opacity:.8">ID da pasta do Drive:</label><input id="drvFolder" value="1QXCxuvUnalen0oOMxJhR0Jz9DoVC6EUB">
+  <div class="ck"><input id="drvOnly" type="checkbox">Só no Drive (não guardar no meu Mac)</div><label style="font-size:11px;opacity:.8">ID da pasta do Drive:</label><input id="drvFolder" value="1QXCxuvUnalen0oOMxJhR0Jz9DoVC6EUB">
   <label style="font-size:11px;opacity:.8">Google Client ID (OAuth):</label><input id="drvCid" placeholder="xxxx.apps.googleusercontent.com">
   <button id="drvBtn" class="sm">🔗 Conectar ao Drive</button><div class="note" id="drvMsg">Desligado. Os vídeos ficam só na pasta do PC.</div></div>
  <button id="bDir">📁 Criar pasta de saída no PC</button><div class="note" id="dirn" style="margin:-2px 0 6px">Cria a pasta "Videos Editados" no local que você escolher. Sem pasta: baixa cada arquivo.</div>
@@ -453,6 +453,7 @@ const dget=(k,d)=>{try{return localStorage.getItem(k)||d}catch(e){return d}},dse
 $('#drvCid').value=dget('drvCid','');$('#drvFolder').value=dget('drvFolder',$('#drvFolder').value);$('#drvOn').checked=dget('drvOn','')==='1';
 const dmsg=t=>{$('#drvMsg').textContent=t};
 function dstate(){dmsg(!$('#drvOn').checked?'Desligado. Os vídeos ficam só na pasta do PC.':DRV.tok?`✅ Conectado ao Drive. ${DRV.ok} enviado(s)${DRV.q.length?`, ${DRV.q.length} na fila`:''}.`:'Ligado, mas ainda não conectado: clique em Conectar.')}
+$('#drvOnly').checked=dget('drvOnly','')==='1';$('#drvOnly').onchange=()=>dset('drvOnly',$('#drvOnly').checked?'1':'0');
 $('#drvOn').onchange=()=>{dset('drvOn',$('#drvOn').checked?'1':'0');dstate()};
 $('#drvCid').onchange=()=>dset('drvCid',$('#drvCid').value.trim());$('#drvFolder').onchange=()=>dset('drvFolder',$('#drvFolder').value.trim());
 function gis(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.onload=res;sc.onerror=()=>rej(new Error('não carregou o login do Google'));document.head.append(sc)})}
@@ -490,7 +491,7 @@ $('#go').onclick=async()=>{
  const q=files.filter(f=>f.on&&f.st!=='ok');if(exporting)return;
  if(!q.length){$('#msg').textContent=files.length?'Nenhum vídeo selecionado ou pendente.':'Envie vídeos primeiro.';return}
  $('#go').disabled=true;
- if(!dirH&&!askedDir&&window.showDirectoryPicker){askedDir=true;await pickDir()}
+ if(!dirH&&!askedDir&&window.showDirectoryPicker&&!($('#drvOnly').checked&&$('#drvOn').checked&&DRV.tok)){askedDir=true;await pickDir()}
  let cnt=Math.max(0,...files.map(f=>f.num||0));for(const f of q)if(!f.num)f.num=++cnt;
  initAudio();cancel=false;$('#go').disabled=true;$('#stop').disabled=false;
  // não grava enquanto a análise de movimento ainda está rodando (disputam o decodificador e o recorte sairia incompleto)
@@ -505,7 +506,10 @@ $('#go').onclick=async()=>{
  for(const f of q){if(cancel)break;
   setSt(f,'gravando…');$('#msg').textContent=`Processando ${n+1} de ${q.length}: ${f.file.name}`;
   try{const b=await exportOne(f,mt);if(cancel){setSt(f,'pendente');break}
-   {const nm=fname(f,mt.x);await save(b,nm);toDrive(b,nm).catch(()=>{});setSt(f,'ok')}}
+   {const nm=fname(f,mt.x);
+    if($('#drvOnly').checked&&$('#drvOn').checked&&DRV.tok&&!dirH){try{await dup1(b,nm);DRV.ok++;dstate()}catch(e){dmsg('⚠ '+e.message+' — salvando no PC para não perder o vídeo');await save(b,nm)}}
+    else{await save(b,nm);toDrive(b,nm).catch(()=>{})}
+    setSt(f,'ok')}}
   catch(e){setSt(f,'erro')}
   n++;$('#pg').value=n/q.length}
  exporting=false;curF=null;updStats();$('#go').disabled=false;$('#stop').disabled=true;
