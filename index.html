@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.6.8</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.7.0</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -79,6 +79,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
  <div class="pane on" id="p1">
   <div class="f"><label>Posição do vídeo na área:</label><select data-k="valign"><option value="top">Colado no topo (abaixo do texto)</option><option value="center">Centralizado</option></select></div>
   <div class="f"><label>Pixels para descer:</label><input data-k="dy" type="range" min="-800" max="800" value="0"><span class="v">0</span></div>
+  <div class="f"><label>Posição horizontal (px):</label><input data-k="dx" type="range" min="-800" max="800" value="0"><span class="v">0</span></div>
   <div class="f"><label>Zoom do vídeo:</label><input data-k="zoom" type="range" min="0.5" max="3" step="0.01" value="1"><span class="v">1</span></div>
   <div class="f"><label>Cor do fundo (fora do template):</label><input data-k="bg" type="color" value="#ffffff"></div>
   <div class="f"><label>Borda no vídeo (px):</label><input data-k="bw" type="range" min="0" max="30" value="0"><span class="v">0</span></div>
@@ -120,15 +121,15 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 <section class="col">
  <div class="bar"><span class="chip">🎬 Aba 1</span><span style="flex:1"></span><span class="note" id="pgen"></span><span class="note" id="cnt">0 vídeo(s)</span></div>
  <div class="stats" id="stats"><span class="pill s-ok">✅<b id="sOk">0</b><span id="lOk">prontos</span></span><span class="pill s-wt">⏳<b id="sWt">0</b><span id="lWt">faltam</span></span><span class="pill s-run" id="pRun" hidden>🎬 gravando…</span><span class="pill s-er" id="pEr" hidden>⚠️<b id="sEr">0</b><span id="lEr">com erro</span></span><span class="pill s-done" id="pDone" hidden>🎉 Tudo pronto!</span></div>
- <div class="bar">Tamanho: <select id="sz"><option value="120">Pequeno</option><option value="170" selected>Médio</option><option value="240">Grande</option></select>
-  <button class="g sm" id="refresh">↻ Atualizar previews</button><button class="sm" id="all">☑ Todos</button><button class="sm" id="none">☐ Limpar</button><button class="sm" id="dup" title="Procura vídeos repetidos entre os que você enviou">🔁 Duplicados</button><button class="sm" id="plan" title="Gera uma planilha com arquivo, legenda, dia e horário de cada post, para você agendar no agendador do Instagram">📅 Plano de postagem</button><button class="r sm" id="clr">🗑 Remover todos</button></div>
+ <div class="bar">Tamanho: <select id="sz"><option value="120">Pequeno</option><option value="170" selected>Médio</option><option value="240">Grande</option><option value="340">Extra grande (2 por linha)</option><option value="480">Gigante (1X)</option></select>
+  <button class="g sm" id="refresh">↻ Atualizar previews</button><button class="sm" id="rstAll" title="Zera posição, zoom e ajustes individuais de todos os vídeos">⟲ Resetar edições</button><button class="sm" id="all">☑ Todos</button><button class="sm" id="none">☐ Limpar</button><button class="sm" id="dup" title="Procura vídeos repetidos entre os que você enviou">🔁 Duplicados</button><button class="sm" id="plan" title="Gera uma planilha com arquivo, legenda, dia e horário de cada post, para você agendar no agendador do Instagram">📅 Plano de postagem</button><button class="r sm" id="clr">🗑 Remover todos</button></div>
  <div id="grid"><div class="empty">Selecione um template e envie vídeos</div></div>
  <progress id="pg" value="0" max="1"></progress><div class="note" id="msg">Cada vídeo é gravado em tempo real. Mantenha a aba aberta e visível. Use Chrome ou Edge.</div>
 </section>
 <aside class="col">
  <h1 style="font-size:16px">👁 Preview</h1><div class="sub">Visualização em tempo real · arraste a área tracejada</div>
  <div class="pv"><canvas id="cv"></canvas></div>
- <div style="display:flex;gap:6px;margin-top:8px"><button class="o" id="play" style="margin:0">▶ Play</button><button id="pause" style="margin:0">⏸ Pausar</button></div>
+ <div style="display:flex;gap:6px;margin-top:8px"><button class="o" id="mvb" style="margin:0" title="Arraste o vídeo no preview e use o scroll para dar zoom">✋ Mover vídeo</button><button class="o" id="play" style="margin:0">▶ Play</button><button id="pause" style="margin:0">⏸ Pausar</button></div>
  <div class="note" id="tm" style="margin:4px 0"></div>
  <button id="auto">📐 Área automática (abaixo do texto)</button>
  <div class="note" id="amsg" style="margin:-2px 0 6px"></div>
@@ -154,9 +155,9 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 const $=s=>document.querySelector(s);
 const cv=$('#cv'),ctx=cv.getContext('2d');
 const vid=document.createElement('video');vid.playsInline=true;vid.preload='auto';
-let capaImg=null,capaUntil=0,autoBusy=false,wmImg=null,musics=[],crop=null,tpl=null,tplS=null,files=[],sel=-1,exporting=false,cancel=false,dirH=null,drag=null,off={x:0,y:0},curF=null,dirty=true;
+let mv=false,mvD=null,snapX=false,capaImg=null,capaUntil=0,autoBusy=false,wmImg=null,musics=[],crop=null,tpl=null,tplS=null,files=[],sel=-1,exporting=false,cancel=false,dirH=null,drag=null,off={x:0,y:0},curF=null,dirty=true;
 const box={x:0,y:.3,w:1,h:.7};
-const S={valign:'top',dy:0,zoom:1,bg:'#ffffff',cover:false,onTop:false,mute:false,speed:1,useCrop:false,autoCrop:false,sens:25,txt:false,tx:'Seu texto aqui',tsz:70,ty:12,tc:'#ffffff',enh:false,musOn:false,musRep:true,musVol:50,wmTxt:'',wmPos:'br',bw:0,bc:'#ffffff',rad:0,autoUp:true,wmSize:18,wmOp:80,start:0,cut:0,q:1080};
+const S={valign:'top',dx:0,dy:0,zoom:1,bg:'#ffffff',cover:false,onTop:false,mute:false,speed:1,useCrop:false,autoCrop:false,sens:25,txt:false,tx:'Seu texto aqui',tsz:70,ty:12,tc:'#ffffff',enh:false,musOn:false,musRep:true,musVol:50,wmTxt:'',wmPos:'br',bw:0,bc:'#ffffff',rad:0,autoUp:true,wmSize:18,wmOp:80,start:0,cut:0,q:1080};
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 function applySize(){const ar=tpl?tpl.naturalHeight/tpl.naturalWidth:16/9;
  cv.width=S.q;cv.height=Math.round(S.q*ar/2)*2;
@@ -188,7 +189,7 @@ function scene(c,W,H,src,vw,vh,f,guides){
   const sx=cr.x*vw,sy=cr.y*vh,sw=cr.w*vw,sh=cr.h*vh;
   const cover=(f&&f.cover!=null)?f.cover:S.cover;
   const k=(cover?Math.max:Math.min)(bw/sw,bh/sh)*S.zoom*(f?f.zoom:1),dw=sw*k,dh=sh*k;
-  const ox=(f?f.dx:0)*u,oy=(S.dy+(f?f.dy:0))*u;
+  const ox=(S.dx+(f?f.dx:0))*u,oy=(S.dy+(f?f.dy:0))*u;
   const x=bx+(bw-dw)/2+ox,y=(S.valign==='top'&&dh<bh)?by+oy:by+(bh-dh)/2+oy;
   c.save();c.beginPath();c.rect(bx,by,bw,bh);c.clip();
   if(S.rad>0){c.beginPath();c.roundRect(x,y,dw,dh,S.rad*u);c.clip()}
@@ -211,7 +212,7 @@ function scene(c,W,H,src,vw,vh,f,guides){
    c.strokeText(S.wmTxt,x+bw/2,y+ih+fs*.15);c.fillText(S.wmTxt,x+bw/2,y+ih+fs*.15)}
   c.restore()}
  if(guides){c.save();c.lineWidth=Math.max(2,W/300);c.strokeStyle='#f5a623';c.setLineDash([14,10]);
-  c.strokeRect(bx+c.lineWidth/2,by+c.lineWidth/2,bw-c.lineWidth,bh-c.lineWidth);c.setLineDash([]);c.fillStyle='#f5a623';const s=Math.max(16,W/50);c.fillRect(bx+bw-s,by+bh-s,s,s);c.restore()}
+  c.strokeRect(bx+c.lineWidth/2,by+c.lineWidth/2,bw-c.lineWidth,bh-c.lineWidth);c.setLineDash([]);if(snapX&&mv){c.strokeStyle='#22d3ee';c.beginPath();c.moveTo(W/2,0);c.lineTo(W/2,H);c.stroke()}c.fillStyle='#f5a623';const s=Math.max(16,W/50);c.fillRect(bx+bw-s,by+bh-s,s,s);c.restore()}
 }
 function wrap(c,t,mw){const out=[];for(const p of String(t).split('\n')){let l='';for(const w of p.split(' ')){const n=l?l+' '+w:w;if(c.measureText(n).width>mw&&l){out.push(l);l=w}else l=n}out.push(l)}return out}
 function paintCard(f){const c=f.cc;if(!c)return;scene(c.getContext('2d'),c.width,c.height,f.frame||null,f.frame?f.frame.width:0,f.frame?f.frame.height:0,f,false)}
@@ -257,18 +258,25 @@ $('#auto').onclick=autoBox;
 $('#ctr').onclick=()=>{box.x=(1-box.w)/2;box.y=(1-box.h)/2;dirty=true};
 $('#full').onclick=()=>{Object.assign(box,{x:0,y:0,w:1,h:1});dirty=true};
 $('#useNow').onclick=()=>{const n=document.querySelector('[data-k=start]');n.value=vid.currentTime.toFixed(1);n.dispatchEvent(new Event('input'))};
+$('#rstAll').onclick=()=>{if(exporting)return;files.forEach(f=>{f.dx=f.dy=0;f.zoom=1;f.cover=null;f.crop=null;f.mute=false;paintCard(f)});renderGrid();dirty=true;$('#msg').textContent='Edições individuais resetadas.'};
 $('#sz').onchange=e=>$('#grid').style.setProperty('--cw',e.target.value+'px');
 
 // arrastar área
 const pt=e=>{const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height}};
+$('#mvb').onclick=()=>{mv=!mv;$('#mvb').classList.toggle('g',mv);$('#mvb').textContent=mv?'✋ Movendo (clique p/ sair)':'✋ Mover vídeo';cv.style.cursor=mv?'grab':''};
+cv.addEventListener('wheel',e=>{if(!mv)return;const f=files[sel];if(!f)return;e.preventDefault();f.zoom=clamp(f.zoom*(e.deltaY<0?1.04:1/1.04),.2,4);dirty=true;paintCard(f)},{passive:false});
 cv.onpointerdown=e=>{const p=pt(e),hx=box.x+box.w,hy=box.y+box.h;
+ if(mv&&files[sel]){const f=files[sel];mvD={x:p.x,y:p.y,dx:f.dx,dy:f.dy};cv.setPointerCapture(e.pointerId);return}
  if(Math.abs(p.x-hx)<.05&&Math.abs(p.y-hy)<.05)drag='r';
  else if(p.x>box.x&&p.x<hx&&p.y>box.y&&p.y<hy){drag='m';off={x:p.x-box.x,y:p.y-box.y}}
  if(drag)cv.setPointerCapture(e.pointerId)};
-cv.onpointermove=e=>{if(!drag)return;const p=pt(e);
+cv.onpointermove=e=>{if(mvD){const f=files[sel],p=pt(e);if(!f)return;
+  f.dx=Math.round(mvD.dx+(p.x-mvD.x)*1080-0);f.dy=Math.round(mvD.dy+(p.y-mvD.y)*1080*cv.height/cv.width);
+  if(Math.abs(f.dx+S.dx)<14){f.dx=-S.dx;snapX=true}else snapX=false;dirty=true;paintCard(f);return}
+ if(!drag)return;const p=pt(e);
  if(drag==='m'){box.x=clamp(p.x-off.x,0,1-box.w);box.y=clamp(p.y-off.y,0,1-box.h)}
  else{box.w=clamp(p.x-box.x,.05,1-box.x);box.h=clamp(p.y-box.y,.05,1-box.y)}dirty=true};
-cv.onpointerup=()=>{drag=null};
+cv.onpointerup=()=>{drag=null;mvD=null;snapX=false;dirty=true};
 
 // vídeo / carregamento
 const loadV=(v,url)=>new Promise((res,rej)=>{const to=setTimeout(()=>rej(new Error('tempo esgotado')),20000);
