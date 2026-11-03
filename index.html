@@ -58,12 +58,13 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.8.0</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.8.1</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
  <h1>✂️ Editor Lote Dark</h1><div class="sub">Processe seus vídeos com templates personalizados</div>
  <button id="bVid">📥 Enviar vídeos (até 200)</button><input id="fvid" type="file" accept="video/*" multiple>
+ <button id="bPasta" title="Carrega todos os vídeos de uma pasta (ex.: Downloads). Você também pode arrastar vídeos para a tela.">📂 Abrir pasta de vídeos</button>
  <button id="bTpl">🖼️ Selecionar template</button><input id="ftpl" type="file" accept="image/*">
  <button id="bNo">🚫 Sem template</button>
  <button id="bCapaTop" class="g">🖼️ Adicionar capa do Reels</button><div class="note" id="capaTopMsg" style="margin:-2px 0 6px">Sem capa. Escolha uma imagem e ela entra no começo de todos os vídeos.</div>
@@ -399,11 +400,17 @@ const numLabel=f=>f.num?fname(f,'').replace(/\.$/,'')+' ← '+f.file.name:f.file
 function setSt(f,s){f.st=s;updStats();if(f.num&&f.el){const n=f.el.querySelector('.n');if(n)n.textContent=numLabel(f)}if(f.badge&&f.el&&f.el.isConnected){f.badge.textContent=s;f.badge.className='b '+(s==='ok'?'ok':s==='erro'?'er':'')}}
 async function pick(i){if(exporting||i<0)return;sel=i;files.forEach((f,j)=>f.el&&f.el.classList.toggle('on',j===i));vid.pause();
  try{await loadVid(files[i].url);await seek(clamp(S.start,0,vid.duration-.1))}catch(e){}}
-$('#fvid').onchange=e=>{initAudio();
- const all=[...e.target.files],room=Math.max(0,200-files.length);
+function addFiles(list){initAudio();
+ const all=[...list].filter(f=>/^video\//.test(f.type)||/\.(mp4|mov|webm|m4v|mkv)$/i.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true})),room=Math.max(0,200-files.length);
+ if(!all.length){$('#msg').textContent='Nenhum vídeo encontrado.';return}
  if(all.length>room)$('#msg').textContent=`Limite de 200 vídeos: ${all.length-room} arquivo(s) ignorado(s).`;
  for(const f of all.slice(0,room))files.push({file:f,url:URL.createObjectURL(f),st:'pendente',on:true,dx:0,dy:0,zoom:1,cover:null,crop:null,mute:false});
- e.target.value='';renderGrid();if(sel<0&&files.length)pick(0)};
+ renderGrid();if(sel<0&&files.length)pick(0)}
+$('#fvid').onchange=e=>{addFiles(e.target.files);e.target.value=''};
+$('#bPasta').onclick=async()=>{if(!window.showDirectoryPicker){$('#msg').textContent='Seu navegador não abre pastas. Use Chrome ou Edge, ou arraste os vídeos para a tela.';return}
+ try{const d=await showDirectoryPicker({mode:'read'}),L=[];for await(const [n,h] of d.entries()){if(h.kind==='file'&&/\.(mp4|mov|webm|m4v|mkv)$/i.test(n))L.push(await h.getFile())}
+  $('#msg').textContent=`📂 ${L.length} vídeo(s) em "${d.name}".`;addFiles(L)}catch(e){if(e.name!=='AbortError')$('#msg').textContent='Erro ao abrir a pasta: '+e.message}};
+['dragover','drop'].forEach(t=>document.addEventListener(t,e=>{if(!e.dataTransfer||![...e.dataTransfer.types].includes('Files'))return;e.preventDefault();if(t==='drop'&&!exporting)addFiles(e.dataTransfer.files)}));
 $('#bMus').onclick=()=>$('#fmus').click();
 $('#fmus').onchange=e=>{for(const f of e.target.files)musics.push({name:f.name,url:URL.createObjectURL(f)});e.target.value='';
  $('#musn').textContent=musics.length+' música(s): '+musics.map(m=>m.name).join(', ').slice(0,90)};
