@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.8.1</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.8.2</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -100,6 +100,11 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
   <div class="f"><label>Tamanho:</label><input data-k="tsz" type="range" min="20" max="220" value="70"><span class="v">70</span></div>
   <div class="f"><label>Posição vertical (%):</label><input data-k="ty" type="range" min="0" max="100" value="12"><span class="v">12</span></div>
   <div class="f"><label>Cor do texto:</label><input data-k="tc" type="color" value="#ffffff"></div>
+  <div class="ck"><input data-k="txt2" type="checkbox">Texto inferior (todos os vídeos)</div>
+  <div class="f"><input data-k="tx2" type="text" value="@seuperfil"></div>
+  <div class="f"><label>Tamanho do inferior:</label><input data-k="tsz2" type="range" min="20" max="220" value="50"><span class="v">50</span></div>
+  <div class="f"><label>Posição vertical do inferior (%):</label><input data-k="ty2" type="range" min="0" max="100" value="92"><span class="v">92</span></div>
+  <div class="f"><label>Cor do inferior:</label><input data-k="tc2" type="color" value="#ffffff"></div>
   <div class="f"><label>Headlines por vídeo (uma por linha, na ordem dos vídeos):</label><textarea id="heads" rows="4" placeholder="Headline do vídeo 1&#10;Headline do vídeo 2"></textarea>
    <button class="g" id="applyHeads" style="margin-top:6px">Aplicar headlines</button><button id="clrHeads">Limpar headlines</button></div>
   <h3>🎵 Música em massa</h3>
@@ -170,7 +175,7 @@ const cv=$('#cv'),ctx=cv.getContext('2d');
 const vid=document.createElement('video');vid.playsInline=true;vid.preload='auto';
 let mv=false,mvD=null,snapX=false,capaImg=null,capaUntil=0,autoBusy=false,wmImg=null,musics=[],crop=null,tpl=null,tplS=null,files=[],sel=-1,exporting=false,cancel=false,dirH=null,drag=null,off={x:0,y:0},curF=null,dirty=true;
 const box={x:0,y:.3,w:1,h:.7};
-const S={valign:'top',dx:0,dy:0,zoom:1,bg:'#ffffff',cover:false,onTop:false,mute:false,speed:1,useCrop:false,autoCrop:false,sens:25,txt:false,tx:'Seu texto aqui',tsz:70,ty:12,tc:'#ffffff',enh:false,musOn:false,musRep:true,musVol:50,wmTxt:'',wmPos:'br',bw:0,bc:'#ffffff',rad:0,autoUp:true,wmSize:18,wmOp:80,start:0,cut:0,q:1080};
+const S={txt2:false,tx2:'@seuperfil',tsz2:50,ty2:92,tc2:'#ffffff',valign:'top',dx:0,dy:0,zoom:1,bg:'#ffffff',cover:false,onTop:false,mute:false,speed:1,useCrop:false,autoCrop:false,sens:25,txt:false,tx:'Seu texto aqui',tsz:70,ty:12,tc:'#ffffff',enh:false,musOn:false,musRep:true,musVol:50,wmTxt:'',wmPos:'br',bw:0,bc:'#ffffff',rad:0,autoUp:true,wmSize:18,wmOp:80,start:0,cut:0,q:1080};
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 function applySize(){const ar=tpl?tpl.naturalHeight/tpl.naturalWidth:16/9;
  cv.width=S.q;cv.height=Math.round(S.q*ar/2)*2;
@@ -214,6 +219,10 @@ function scene(c,W,H,src,vw,vh,f,guides){
  if(S.txt&&tx){const fs=S.tsz*u;c.font=`800 ${fs}px system-ui,sans-serif`;c.textAlign='center';c.textBaseline='middle';
   c.lineJoin='round';c.lineWidth=fs/7;c.strokeStyle='#000';c.fillStyle=S.tc;
   const ls=wrap(c,tx,W*.9),y0=H*S.ty/100-(ls.length-1)*fs*1.1/2;
+  ls.forEach((l,i)=>{const y=y0+i*fs*1.1;c.strokeText(l,W/2,y);c.fillText(l,W/2,y)})}
+ if(S.txt2&&S.tx2){const fs=S.tsz2*u;c.font=`800 ${fs}px system-ui,sans-serif`;c.textAlign='center';c.textBaseline='middle';
+  c.lineJoin='round';c.lineWidth=fs/7;c.strokeStyle='#000';c.fillStyle=S.tc2;
+  const ls=wrap(c,S.tx2,W*.9),y0=H*S.ty2/100-(ls.length-1)*fs*1.1/2;
   ls.forEach((l,i)=>{const y=y0+i*fs*1.1;c.strokeText(l,W/2,y);c.fillText(l,W/2,y)})}
  if(wmImg||S.wmTxt){c.save();c.globalAlpha=S.wmOp/100;const m=W*.03,ww=W*S.wmSize/100,fs=Math.max(10,ww/6);
   const iw=wmImg?ww:0,ih=wmImg?ww*wmImg.naturalHeight/wmImg.naturalWidth:0;let tw=0;
