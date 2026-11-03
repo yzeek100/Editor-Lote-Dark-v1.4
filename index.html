@@ -31,7 +31,7 @@ input[type=color]{width:100%;height:32px;border:1px solid var(--bd);border-radiu
 .ck{display:flex;gap:8px;align-items:center;margin:7px 0}
 .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .bar select{padding:5px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx)}
-.chip{background:var(--gr);color:#fff;padding:5px 14px;border-radius:7px;font-weight:700}
+.lm{position:fixed;inset:0;background:#000c;z-index:60;display:flex;align-items:center;justify-content:center}.lm[hidden]{display:none}.lb{background:#191b34;border:1px solid var(--bd);border-radius:12px;width:min(980px,96vw);max-height:92vh;overflow:auto;padding:14px}.lb h2{font-size:17px;margin:0 0 8px}.lb table{width:100%;border-collapse:collapse;font-size:12px}.lb td,.lb th{padding:5px 6px;border-bottom:1px solid var(--bd);text-align:left}.lb input[type=text],.lb input[type=number],.lb input[type=date],.lb input[type=time],.lb textarea{background:#0f1020;border:1px solid var(--bd);color:var(--tx);border-radius:6px;padding:4px 6px;font:inherit;width:auto}.lb .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}.lb .kp{background:#0f1020;border:1px solid var(--bd);border-radius:8px;padding:6px 12px;text-align:center}.lb .kp b{display:block;font-size:20px}.lb button{width:auto;margin:0}.chip{background:var(--gr);color:#fff;padding:5px 14px;border-radius:7px;font-weight:700}
 #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--cw,170px),1fr));gap:8px}
 .vc{background:var(--pn2);border:2px solid transparent;border-radius:8px;overflow:hidden;cursor:pointer;position:relative}
 .vc.on{border-color:var(--or)}
@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.7.0</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.8.0</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -122,7 +122,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
  <div class="bar"><span class="chip">🎬 Aba 1</span><span style="flex:1"></span><span class="note" id="pgen"></span><span class="note" id="cnt">0 vídeo(s)</span></div>
  <div class="stats" id="stats"><span class="pill s-ok">✅<b id="sOk">0</b><span id="lOk">prontos</span></span><span class="pill s-wt">⏳<b id="sWt">0</b><span id="lWt">faltam</span></span><span class="pill s-run" id="pRun" hidden>🎬 gravando…</span><span class="pill s-er" id="pEr" hidden>⚠️<b id="sEr">0</b><span id="lEr">com erro</span></span><span class="pill s-done" id="pDone" hidden>🎉 Tudo pronto!</span></div>
  <div class="bar">Tamanho: <select id="sz"><option value="120">Pequeno</option><option value="170" selected>Médio</option><option value="240">Grande</option><option value="340">Extra grande (2 por linha)</option><option value="480">Gigante (1X)</option></select>
-  <button class="g sm" id="refresh">↻ Atualizar previews</button><button class="sm" id="rstAll" title="Zera posição, zoom e ajustes individuais de todos os vídeos">⟲ Resetar edições</button><button class="sm" id="all">☑ Todos</button><button class="sm" id="none">☐ Limpar</button><button class="sm" id="dup" title="Procura vídeos repetidos entre os que você enviou">🔁 Duplicados</button><button class="sm" id="plan" title="Gera uma planilha com arquivo, legenda, dia e horário de cada post, para você agendar no agendador do Instagram">📅 Plano de postagem</button><button class="r sm" id="clr">🗑 Remover todos</button></div>
+  <button class="g sm" id="refresh">↻ Atualizar previews</button><button class="sm" id="rstAll" title="Zera posição, zoom e ajustes individuais de todos os vídeos">⟲ Resetar edições</button><button class="o sm" id="libb" title="Biblioteca, calendário e painel de produção">📚 Biblioteca</button><button class="sm" id="all">☑ Todos</button><button class="sm" id="none">☐ Limpar</button><button class="sm" id="dup" title="Procura vídeos repetidos entre os que você enviou">🔁 Duplicados</button><button class="sm" id="plan" title="Gera uma planilha com arquivo, legenda, dia e horário de cada post, para você agendar no agendador do Instagram">📅 Plano de postagem</button><button class="r sm" id="clr">🗑 Remover todos</button></div>
  <div id="grid"><div class="empty">Selecione um template e envie vídeos</div></div>
  <progress id="pg" value="0" max="1"></progress><div class="note" id="msg">Cada vídeo é gravado em tempo real. Mantenha a aba aberta e visível. Use Chrome ou Edge.</div>
 </section>
@@ -151,6 +151,18 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
  <button id="clrCrop">Limpar corte de movimento</button>
 </aside>
 </div>
+<div class="lm" id="lib" hidden><div class="lb">
+ <div class="row"><h2 style="margin:0;flex:1">📚 Biblioteca · Calendário · Painel</h2><button class="r sm" id="libx">✕ Fechar</button></div>
+ <div class="row" id="libk"></div>
+ <div class="row"><input type="text" id="libq" placeholder="Buscar nome, etiqueta ou legenda…" style="flex:1;min-width:180px"><select id="libf"><option value="all">Todos</option><option value="pend">Não postados</option><option value="post">Postados</option><option value="drive">No Drive</option><option value="nodrive">Fora do Drive</option></select>
+  <button class="sm" id="libsel">☑ Marcar visíveis</button><button class="sm" id="libclr">☐ Limpar marcas</button><button class="sm" id="libpost">✔ Marcar como postado</button><button class="sm" id="libunp">↩ Desmarcar postado</button><button class="sm" id="libdel">🗑 Remover da lista</button></div>
+ <div style="max-height:34vh;overflow:auto;border:1px solid var(--bd);border-radius:8px"><table><thead><tr><th></th><th>Arquivo</th><th>Lote / data</th><th>MB</th><th>Drive</th><th>Postado</th><th>Etiqueta</th><th>Legenda</th></tr></thead><tbody id="libt"></tbody></table></div>
+ <h2 style="margin-top:12px">📅 Calendário · gerar plano (CSV)</h2>
+ <div class="note">Usa os vídeos marcados (ou, se nenhum estiver marcado, todos os não postados). Os intervalos entre posts do mesmo dia variam entre o mínimo e o máximo.</div>
+ <div class="row">Posts por dia <input type="number" id="cPd" min="1" max="50" value="3" style="width:60px"> Primeiro dia <input type="date" id="cD"> 1º horário <input type="time" id="cT" value="09:00"> Intervalo (min) <input type="number" id="cMin" min="1" max="600" value="10" style="width:60px"> a <input type="number" id="cMax" min="1" max="600" value="12" style="width:60px"> Reels de teste por dia <input type="number" id="cTe" min="0" max="50" value="0" style="width:60px"></div>
+ <div class="row"><textarea id="cCap" rows="3" placeholder="Legenda padrão (usada quando o vídeo não tem legenda própria)" style="flex:1;min-width:240px"></textarea><button class="g" id="cGo">⬇ Gerar CSV do plano</button></div>
+ <div class="note" id="libm"></div>
+</div></div>
 <script>
 const $=s=>document.querySelector(s);
 const cv=$('#cv'),ctx=cv.getContext('2d');
@@ -545,12 +557,50 @@ $('#go').onclick=async()=>{
  for(const f of q){if(cancel)break;
   setSt(f,'gravando…');$('#msg').textContent=`Processando ${n+1} de ${q.length}: ${f.file.name}`;
   try{const b=await exportOne(f,mt);if(cancel){setSt(f,'pendente');break}
-   {const nm=fname(f,mt.x);
-    if($('#drvOnly').checked&&$('#drvOn').checked&&DRV.tok&&!dirH){try{await dup1(b,nm);DRV.ok++;dstate()}catch(e){dmsg('⚠ '+e.message+' — salvando no PC para não perder o vídeo');await save(b,nm)}}
-    else{await save(b,nm);toDrive(b,nm).catch(()=>{})}
+   {const nm=fname(f,mt.x);let inDrive=false;
+    if($('#drvOnly').checked&&$('#drvOn').checked&&DRV.tok&&!dirH){try{await dup1(b,nm);inDrive=true;DRV.ok++;dstate()}catch(e){dmsg('⚠ '+e.message+' — salvando no PC para não perder o vídeo');await save(b,nm)}}
+    else{await save(b,nm);toDrive(b,nm).then(()=>libMark(nm,$('#drvOn').checked&&!!DRV.tok)).catch(()=>{})}
+    libAdd(nm,b.size,inDrive,f.text||'');
     setSt(f,'ok')}}
   catch(e){setSt(f,'erro')}
   n++;$('#pg').value=n/q.length}
  exporting=false;curF=null;updStats();$('#go').disabled=false;$('#stop').disabled=true;
  $('#msg').textContent=cancel?'Cancelado. Clique em Processar para continuar de onde parou.':'Concluído.'};
+// ===== Biblioteca / calendário / painel =====
+const LIB={get(){try{return JSON.parse(localStorage.getItem('lib')||'[]')}catch(e){return[]}},set(a){try{localStorage.setItem('lib',JSON.stringify(a))}catch(e){}}};
+function libAdd(name,size,drive,cap){const a=LIB.get();a.unshift({id:Date.now()+'_'+Math.random().toString(36).slice(2,6),name,date:new Date().toISOString(),size,drive:!!drive,posted:false,tag:'',cap:cap||'',sel:false});LIB.set(a.slice(0,3000))}
+function libMark(name,drive){if(!drive)return;const a=LIB.get();const r=a.find(x=>x.name===name&&!x.drive);if(r){r.drive=true;LIB.set(a)}}
+const libEsc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function libVis(){const a=LIB.get(),q=$('#libq').value.trim().toLowerCase(),f=$('#libf').value;
+ return a.filter(x=>(!q||(x.name+' '+x.tag+' '+x.cap).toLowerCase().includes(q))&&(f==='all'||(f==='pend'&&!x.posted)||(f==='post'&&x.posted)||(f==='drive'&&x.drive)||(f==='nodrive'&&!x.drive)))}
+function libRender(){const a=LIB.get(),v=libVis(),td=new Date().toISOString().slice(0,10);
+ const k=[['Editados hoje',a.filter(x=>x.date.slice(0,10)===td).length],['Na biblioteca',a.length],['No Drive',a.filter(x=>x.drive).length],['Postados',a.filter(x=>x.posted).length],['Falta postar',a.filter(x=>!x.posted).length]];
+ $('#libk').innerHTML=k.map(x=>`<div class="kp"><b>${x[1]}</b>${x[0]}</div>`).join('');
+ $('#libt').innerHTML=v.map(x=>`<tr data-id="${x.id}"><td><input type="checkbox" data-a="sel" ${x.sel?'checked':''}></td><td>${libEsc(x.name)}</td><td>${new Date(x.date).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td><td>${(x.size/1048576).toFixed(1)}</td><td>${x.drive?'✅':'—'}</td><td>${x.posted?'✅':'—'}</td><td><input type="text" data-a="tag" value="${libEsc(x.tag)}" style="width:90px"></td><td><input type="text" data-a="cap" value="${libEsc(x.cap)}" style="width:200px"></td></tr>`).join('')||'<tr><td colspan="8" class="note">Nada por aqui ainda. Os vídeos processados aparecem automaticamente.</td></tr>'}
+function libEdit(fn){const a=LIB.get();fn(a);LIB.set(a);libRender()}
+$('#libb').onclick=()=>{if(!$('#cD').value)$('#cD').value=new Date(Date.now()+864e5).toISOString().slice(0,10);$('#lib').hidden=false;libRender()};
+$('#libx').onclick=()=>{$('#lib').hidden=true};
+$('#lib').addEventListener('click',e=>{if(e.target.id==='lib')$('#lib').hidden=true});
+$('#libq').oninput=libRender;$('#libf').onchange=libRender;
+$('#libt').addEventListener('change',e=>{const el=e.target,tr=el.closest('tr');if(!tr)return;const id=tr.dataset.id,a=el.dataset.a;
+ const A=LIB.get(),r=A.find(x=>x.id===id);if(!r)return;if(a==='sel')r.sel=el.checked;else if(a==='tag')r.tag=el.value;else if(a==='cap')r.cap=el.value;LIB.set(A)});
+$('#libsel').onclick=()=>{const ids=new Set(libVis().map(x=>x.id));libEdit(a=>a.forEach(x=>{if(ids.has(x.id))x.sel=true}))};
+$('#libclr').onclick=()=>libEdit(a=>a.forEach(x=>x.sel=false));
+$('#libpost').onclick=()=>libEdit(a=>a.forEach(x=>{if(x.sel){x.posted=true;x.sel=false}}));
+$('#libunp').onclick=()=>libEdit(a=>a.forEach(x=>{if(x.sel){x.posted=false;x.sel=false}}));
+$('#libdel').onclick=()=>{const n=LIB.get().filter(x=>x.sel).length;if(!n)return;if(!confirm(`Remover ${n} item(ns) da lista? Os arquivos não são apagados.`))return;LIB.set(LIB.get().filter(x=>!x.sel));libRender()};
+$('#cGo').onclick=()=>{let L=LIB.get().filter(x=>x.sel);if(!L.length)L=LIB.get().filter(x=>!x.posted);
+ if(!L.length){$('#libm').textContent='Nenhum vídeo para o plano.';return}
+ L=L.slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+ const pd=clamp(+$('#cPd').value||1,1,50),d0=$('#cD').value,t0=$('#cT').value||'09:00',mn=clamp(+$('#cMin').value||10,1,600),mx=Math.max(mn,clamp(+$('#cMax').value||mn,1,600)),te=clamp(+$('#cTe').value||0,0,pd),dc=$('#cCap').value;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(d0)){$('#libm').textContent='Escolha o primeiro dia.';return}
+ const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',pad=n=>String(n).padStart(2,'0');
+ const rows=[['ordem','arquivo','legenda','data','hora','tipo']];let min=0;
+ L.forEach((x,i)=>{const di=Math.floor(i/pd),k=i%pd;if(k===0)min=0;else min+=mn+((i*7)%(mx-mn+1));
+  const [h,m]=t0.split(':').map(Number),tot=h*60+m+min,day=new Date(d0+'T12:00:00');day.setDate(day.getDate()+di+Math.floor(tot/1440));const tt=tot%1440;
+  rows.push([i+1,x.name,x.cap||dc,day.toISOString().slice(0,10),pad(Math.floor(tt/60))+':'+pad(tt%60),k<te?'reels_teste':'feed'])});
+ const csv='﻿'+rows.map(r=>r.map(q).join(';')).join('\n'),a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='plano de postagem.csv';document.body.append(a);a.click();a.remove();
+ $('#libm').textContent=`📅 Plano gerado com ${L.length} post(s), ${pd} por dia, intervalos de ${mn} a ${mx} min.`};
+
 </script></body></html>
