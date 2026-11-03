@@ -58,7 +58,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
 .ok{color:#6fdc8c}.er{color:#ff7b81}
 </style></head>
 <body>
-<div class="top"><div>Editor Lote Dark v1.8.2</div><span>Processamento local no navegador</span></div>
+<div class="top"><div>Editor Lote Dark v1.8.3</div><span>Processamento local no navegador</span></div>
 <div class="tabs"><button class="tab on">🎬 Editar vídeos</button><button class="tab" disabled>📝 Editar frases (em breve)</button><button class="tab" disabled>🖼️ Criar carrossel (em breve)</button></div>
 <div class="app">
 <aside class="col">
@@ -92,7 +92,7 @@ h3{font-size:13px;margin:12px 0 6px;color:var(--or)}.note{color:var(--mu);font-s
   <div class="ck"><input data-k="onTop" type="checkbox">Moldura (template por cima)</div>
   <div class="ck"><input data-k="mute" type="checkbox">Remover áudio de todos</div>
   <div class="ck"><input data-k="enh" type="checkbox">Melhorar áudio (voz clara e volume nivelado)</div>
-  <div class="f"><label>Velocidade:</label><input data-k="speed" type="number" min="0.25" max="4" step="0.25" value="1"></div>
+  <div class="f"><label>Velocidade:</label><select data-k="speed" autocomplete="off"><option value="1" selected>Original (1x)</option><option value="1.03">Um pouco mais rápido (1,03x)</option><option value="1.05">1,05x</option><option value="1.08">1,08x</option><option value="1.1">1,10x</option><option value="1.15">1,15x</option><option value="1.2">1,20x</option></select></div>
  </div>
  <div class="pane" id="p2">
   <div class="ck"><input data-k="txt" type="checkbox">Texto no vídeo</div>
@@ -265,7 +265,7 @@ function autoBox(){if(!tpl){$('#amsg').textContent='Sem template: escolha um par
 
 // controles
 document.querySelectorAll('[data-k]').forEach(el=>{
- const f=()=>{const k=el.dataset.k;S[k]=el.type==='checkbox'?el.checked:(el.type==='number'||el.type==='range')?+el.value:el.value;
+ const f=()=>{const k=el.dataset.k;S[k]=el.type==='checkbox'?el.checked:(el.type==='number'||el.type==='range')?+el.value:el.value;if(k==='speed')S.speed=clamp(+el.value||1,.5,2);
   const v=el.nextElementSibling;if(v&&v.className==='v')v.textContent=el.value;
   if(k==='speed')vid.playbackRate=S.speed;if(k==='mute'&&gain)gain.gain.value=S.mute?0:1;if(k==='enh')setEnh();if(k==='autoUp'&&S.autoUp)runAuto();dirty=true};
  el.addEventListener('input',f);el.addEventListener('change',f);f()});
